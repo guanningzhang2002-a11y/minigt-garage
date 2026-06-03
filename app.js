@@ -458,6 +458,12 @@ function scheduleCloudPush() {
 
 async function pushToCloud({ silent } = { silent: true }) {
   if (!isSyncReady() || syncBusy) return;
+  const pushButton = document.querySelector("#pushSyncBtn");
+  const originalText = pushButton?.textContent;
+  if (pushButton) {
+    pushButton.disabled = true;
+    pushButton.textContent = "正在上传...";
+  }
   syncBusy = true;
   setSyncMessage("正在上传云端...");
   try {
@@ -477,11 +483,21 @@ async function pushToCloud({ silent } = { silent: true }) {
     if (!silent) alert(`同步失败：${error.message}`);
   } finally {
     syncBusy = false;
+    if (pushButton) {
+      pushButton.disabled = false;
+      pushButton.textContent = originalText;
+    }
   }
 }
 
 async function pullFromCloud({ silent } = { silent: true }) {
   if (!isSyncReady() || syncBusy) return;
+  const pullButton = document.querySelector("#pullSyncBtn");
+  const originalText = pullButton?.textContent;
+  if (pullButton) {
+    pullButton.disabled = true;
+    pullButton.textContent = "正在下载...";
+  }
   syncBusy = true;
   setSyncMessage("正在读取云端...");
   try {
@@ -505,6 +521,10 @@ async function pullFromCloud({ silent } = { silent: true }) {
     if (!silent) alert(`读取失败：${error.message}`);
   } finally {
     syncBusy = false;
+    if (pullButton) {
+      pullButton.disabled = false;
+      pullButton.textContent = originalText;
+    }
   }
 }
 

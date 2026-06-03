@@ -1,4 +1,4 @@
-const cacheName = "minigt-tracker-v1";
+const cacheName = "minigt-tracker-v2";
 const appShell = [
   "./",
   "./index.html",
@@ -27,6 +27,26 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  const freshFirst = [
+    "/",
+    "/index.html",
+    "/app.js",
+    "/styles.css",
+    "/manifest.webmanifest"
+  ].some((path) => url.pathname.endsWith(path));
+
+  if (freshFirst) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const copy = response.clone();
+        caches.open(cacheName).then((cache) => cache.put(event.request, copy));
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) =>
       cached || fetch(event.request).then((response) => {
