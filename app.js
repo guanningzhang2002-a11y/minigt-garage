@@ -121,6 +121,7 @@ let syncTimer = null;
 let syncBusy = false;
 let pendingCloudPush = false;
 let lastLocalChangeAt = 0;
+let hasUnsyncedLocalChanges = false;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -303,6 +304,7 @@ function inferPackageType(note) {
 
 function persist() {
   lastLocalChangeAt = Date.now();
+  hasUnsyncedLocalChanges = true;
   saveLocalOnly();
   scheduleCloudPush();
 }
@@ -497,7 +499,8 @@ function scheduleCloudPush() {
 
 function refreshFromCloud() {
   if (!isSyncReady() || syncBusy) return;
-  if (Date.now() - lastLocalChangeAt < 2000) return;
+  if (hasUnsyncedLocalChanges || pendingCloudPush) return;
+  if (Date.now() - lastLocalChangeAt < 10000) return;
   pullFromCloud({ silent: true });
 }
 
@@ -525,10 +528,11 @@ async function pushToCloud({ silent } = { silent: true }) {
       })
     });
     if (!response.ok) throw new Error(await response.text());
+    hasUnsyncedLocalChanges = false;
     setSyncMessage(`已上传 ${inventory.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
   } catch (error) {
-    setSyncMessage("同步失败，请检查 Supabase 设置");
+    setSyncMessage("上传失败，本地改动已保留");
     if (!silent) alert(`同步失败：${error.message}`);
   } finally {
     syncBusy = false;
