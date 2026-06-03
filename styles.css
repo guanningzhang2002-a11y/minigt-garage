@@ -907,9 +907,29 @@ tbody tr:hover {
 }
 
 @media (max-width: 700px) {
+  body {
+    background: #eef1f4;
+  }
+
+  .app-shell {
+    overflow-x: hidden;
+  }
+
+  .workspace,
+  .stats-grid {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .inventory-panel {
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr 1fr;
     margin-top: -24px;
+    gap: 8px;
   }
 
   .hero,
@@ -932,6 +952,192 @@ tbody tr:hover {
   .toolbar select,
   .search-box {
     width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .search-box {
+    grid-column: 1 / -1;
+  }
+
+  .status-summary {
+    gap: 6px;
+    margin: 8px 0 10px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+  }
+
+  .summary-pill {
+    flex: 0 0 auto;
+  }
+
+  .table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    min-width: 0;
+    background: transparent;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  tr.preview-target {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 0 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(24, 32, 42, 0.06);
+  }
+
+  tbody tr:hover {
+    background: #fff;
+  }
+
+  td {
+    padding: 0;
+    border: 0;
+    font-size: 13px;
+  }
+
+  td:last-child {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  tr.preview-target td:nth-child(1) {
+    grid-row: 1 / 7;
+  }
+
+  tr.preview-target td:nth-child(2) {
+    align-self: start;
+    margin-bottom: 5px;
+  }
+
+  tr.preview-target td:nth-child(3) {
+    grid-column: 2;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  tr.preview-target td:nth-child(4) {
+    grid-column: 2;
+  }
+
+  tr.preview-target td:nth-child(5),
+  tr.preview-target td:nth-child(6),
+  tr.preview-target td:nth-child(7) {
+    grid-column: 2;
+    color: var(--muted);
+    line-height: 1.35;
+    margin-top: 4px;
+  }
+
+  tr.preview-target td:nth-child(5)::before {
+    content: "包装 ";
+    color: var(--steel);
+    font-weight: 700;
+  }
+
+  tr.preview-target td:nth-child(6)::before {
+    content: "数量 ";
+    color: var(--steel);
+    font-weight: 700;
+  }
+
+  tr.preview-target td:nth-child(7):empty {
+    display: none;
+  }
+
+  tr.preview-target td:nth-child(7)::before {
+    content: "备注 ";
+    color: var(--steel);
+    font-weight: 700;
+  }
+
+  tr.preview-target td:nth-child(8) {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  .car-image-thumb {
+    width: 112px;
+    height: 84px;
+    border-radius: 8px;
+  }
+
+  .model-cell strong {
+    margin-bottom: 3px;
+    font-size: 15px;
+    line-height: 1.28;
+  }
+
+  .model-cell a {
+    font-size: 12px;
+  }
+
+  .row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .row-actions button {
+    min-height: 38px;
+    font-size: 13px;
+  }
+
+  .photo-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .photo-card {
+    display: grid;
+    grid-template-columns: 124px minmax(0, 1fr);
+  }
+
+  .photo-card .car-image-photo {
+    height: 100%;
+    min-height: 132px;
+  }
+
+  .photo-info h3 {
+    font-size: 15px;
+  }
+
+  .hover-preview {
+    display: none;
   }
 
   .sync-actions {

@@ -1052,7 +1052,7 @@ function tableRow(item) {
     <tr class="preview-target" data-preview="${escapeHtml(carImage(item))}" data-title="${escapeHtml(item.model)}" data-subtitle="#${escapeHtml(item.number)} · ${escapeHtml(item.packageText || item.packageType)} · 数量 ${Number(item.quantity || 0)}">
       <td>${imageMarkup(item, "thumb")}</td>
       <td><span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
-      <td>${escapeHtml(item.number)}</td>
+      <td class="number-cell">#${escapeHtml(item.number)}</td>
       <td class="model-cell"><strong>${escapeHtml(item.model)}</strong>${item.productUrl ? `<a href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">产品页</a>` : ""}</td>
       <td>${escapeHtml(item.packageText || item.packageType)}</td>
       <td>${Number(item.quantity || 0)}</td>
