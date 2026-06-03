@@ -191,6 +191,9 @@ saveLocalOnly();
 renderQuickMatch();
 render();
 updateSyncStatus();
+if (isSyncReady() && !hasUnsyncedLocalChanges) {
+  pullFromCloud({ silent: true });
+}
 registerServiceWorker();
 
 function loadInventory() {
