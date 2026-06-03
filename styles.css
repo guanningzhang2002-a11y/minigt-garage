@@ -926,6 +926,34 @@ tbody tr:hover {
   margin-top: 3px;
 }
 
+.back-to-top {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(24, 32, 42, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .empty-state {
   display: none;
   margin: 18px 0 6px;
@@ -1175,6 +1203,11 @@ tbody tr:hover {
 
   .hover-preview {
     display: none;
+  }
+
+  .back-to-top {
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
   }
 
   .sync-actions {

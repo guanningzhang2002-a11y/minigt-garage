@@ -187,10 +187,13 @@ els.addModal.addEventListener("click", (event) => {
 document.addEventListener("mousemove", movePreview);
 document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
+document.querySelector("#backToTopBtn")?.addEventListener("click", scrollToTop);
+window.addEventListener("scroll", toggleBackToTop, { passive: true });
 saveLocalOnly();
 renderQuickMatch();
 render();
 updateSyncStatus();
+toggleBackToTop();
 if (isSyncReady() && !hasUnsyncedLocalChanges) {
   pullFromCloud({ silent: true });
 }
@@ -642,6 +645,14 @@ function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (location.protocol === "file:") return;
   navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+function toggleBackToTop() {
+  document.querySelector("#backToTopBtn")?.classList.toggle("visible", window.scrollY > 520);
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function saveCar(event) {
