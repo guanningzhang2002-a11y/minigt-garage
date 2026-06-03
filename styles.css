@@ -928,18 +928,19 @@ tbody tr:hover {
 
 .back-to-top {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: 28px;
+  bottom: 78px;
   z-index: 50;
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 2px solid rgba(179, 34, 42, 0.28);
   border-radius: 8px;
   background: #fff;
   color: var(--accent);
-  font-size: 22px;
+  font-size: 42px;
+  line-height: 1;
   font-weight: 800;
   box-shadow: 0 14px 34px rgba(24, 32, 42, 0.18);
   opacity: 0;
@@ -1207,7 +1208,11 @@ tbody tr:hover {
 
   .back-to-top {
     right: 12px;
-    bottom: max(12px, env(safe-area-inset-bottom));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: 56px;
+    height: 56px;
+    min-height: 56px;
+    font-size: 34px;
   }
 
   .sync-actions {
