@@ -1148,4 +1148,100 @@ tbody tr:hover {
     max-width: 100%;
   }
 
+  .edit-modal {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+  }
+
+  .edit-dialog {
+    width: 100%;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    padding: max(14px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom));
+    box-shadow: none;
+  }
+
+  .edit-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin: -14px -12px 12px;
+    padding: max(14px, env(safe-area-inset-top)) 12px 10px;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .edit-head h2 {
+    font-size: 18px;
+    line-height: 1.25;
+  }
+
+  .edit-preview {
+    grid-template-columns: 110px minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .edit-preview img {
+    width: 110px;
+    height: 78px;
+  }
+
+  .image-choice-grid {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .image-choice-grid button {
+    flex: 0 0 132px;
+    width: 132px;
+    scroll-snap-align: start;
+  }
+
+  .status-field {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .package-manager-head {
+    align-items: stretch;
+  }
+
+  .package-manager-head > div {
+    justify-content: flex-start;
+  }
+
+  .package-row {
+    padding: 12px 10px;
+  }
+
+  .package-row-title {
+    align-items: center;
+  }
+
+  .package-row-title strong {
+    font-size: 17px;
+  }
+
+  .edit-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    grid-template-columns: 1fr 1fr;
+    margin: 12px -12px min(-18px, calc(env(safe-area-inset-bottom) * -1));
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--line);
+  }
+
+  .edit-actions .primary,
+  .edit-actions .danger {
+    min-height: 46px;
+    padding: 0 10px;
+  }
+
 }
