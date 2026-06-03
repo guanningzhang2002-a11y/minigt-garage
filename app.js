@@ -572,10 +572,13 @@ async function pullFromCloud({ silent } = { silent: true }) {
     pullButton.textContent = "正在下载...";
   }
   syncBusy = true;
-  setSyncMessage("正在读取云端...");
+  if (!silent) setSyncMessage("正在读取云端...");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at`), {
-      headers: syncHeaders()
+      headers: syncHeaders(),
+      signal: controller.signal
     });
     if (!response.ok) throw new Error(await response.text());
     const rows = await response.json();
@@ -600,9 +603,10 @@ async function pullFromCloud({ silent } = { silent: true }) {
     setSyncMessage(`已下载 ${inventory.length} 条 · ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
   } catch (error) {
-    setSyncMessage("读取失败，请检查 Supabase 设置");
+    if (!silent) setSyncMessage(error.name === "AbortError" ? "云端读取超时，稍后会重试" : "读取失败，请检查 Supabase 设置");
     if (!silent) alert(`读取失败：${error.message}`);
   } finally {
+    window.clearTimeout(timeout);
     syncBusy = false;
     if (pullButton) {
       pullButton.disabled = false;
