@@ -114,14 +114,16 @@ const seedInventory = [
 
 const storageKey = "minigt-inventory-v1";
 const syncStorageKey = "minigt-sync-v1";
+const syncDirtyKey = "minigt-sync-dirty-v1";
+const localChangedAtKey = "minigt-local-changed-at-v1";
 const syncTable = "minigt_collections";
 let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
 let syncTimer = null;
 let syncBusy = false;
 let pendingCloudPush = false;
-let lastLocalChangeAt = 0;
-let hasUnsyncedLocalChanges = false;
+let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
+let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -197,7 +199,8 @@ renderQuickMatch();
 render();
 updateSyncStatus();
 if (isSyncReady()) {
-  pullFromCloud({ silent: true });
+  if (hasUnsyncedLocalChanges) pushToCloud({ silent: true });
+  else pullFromCloud({ silent: true });
 }
 registerServiceWorker();
 
@@ -304,13 +307,24 @@ function inferPackageType(note) {
 
 function persist() {
   lastLocalChangeAt = Date.now();
-  hasUnsyncedLocalChanges = true;
+  markLocalDirty();
   saveLocalOnly();
   scheduleCloudPush();
 }
 
 function saveLocalOnly() {
   localStorage.setItem(storageKey, JSON.stringify(inventory));
+}
+
+function markLocalDirty() {
+  hasUnsyncedLocalChanges = true;
+  localStorage.setItem(syncDirtyKey, "true");
+  localStorage.setItem(localChangedAtKey, String(lastLocalChangeAt));
+}
+
+function clearLocalDirty() {
+  hasUnsyncedLocalChanges = false;
+  localStorage.removeItem(syncDirtyKey);
 }
 
 function injectSyncUi() {
@@ -445,7 +459,9 @@ function saveSyncConfigFromForm() {
 
 function clearSyncSettings() {
   localStorage.removeItem(syncStorageKey);
+  localStorage.removeItem(syncDirtyKey);
   syncConfig = { url: "", key: "", owner: "" };
+  hasUnsyncedLocalChanges = false;
   updateSyncStatus();
   updateSyncModalState();
   closeSyncModal();
@@ -499,7 +515,10 @@ function scheduleCloudPush() {
 
 function refreshFromCloud() {
   if (!isSyncReady() || syncBusy) return;
-  if (hasUnsyncedLocalChanges || pendingCloudPush) return;
+  if (hasUnsyncedLocalChanges || pendingCloudPush) {
+    scheduleCloudPush();
+    return;
+  }
   if (Date.now() - lastLocalChangeAt < 10000) return;
   pullFromCloud({ silent: true });
 }
@@ -547,7 +566,7 @@ async function pushToCloud({ silent } = { silent: true }) {
     });
     if (!response.ok) throw new Error(await response.text());
     await response.json().catch(() => []);
-    hasUnsyncedLocalChanges = false;
+    clearLocalDirty();
     setSyncMessage(`已上传 ${inventory.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
   } catch (error) {
