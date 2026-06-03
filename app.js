@@ -365,8 +365,12 @@ function injectSyncUi() {
     if (event.target === document.querySelector("#syncModal")) closeSyncModal();
   });
   document.querySelector("#syncForm")?.addEventListener("submit", saveSyncSettings);
-  document.querySelector("#pullSyncBtn")?.addEventListener("click", () => pullFromCloud({ silent: false }));
-  document.querySelector("#pushSyncBtn")?.addEventListener("click", () => pushToCloud({ silent: false }));
+  document.querySelector("#pullSyncBtn")?.addEventListener("click", () => {
+    if (saveSyncConfigFromForm()) pullFromCloud({ silent: false });
+  });
+  document.querySelector("#pushSyncBtn")?.addEventListener("click", () => {
+    if (saveSyncConfigFromForm()) pushToCloud({ silent: false });
+  });
   document.querySelector("#clearSyncBtn")?.addEventListener("click", clearSyncSettings);
 }
 
@@ -388,6 +392,11 @@ function closeSyncModal() {
 
 async function saveSyncSettings(event) {
   event.preventDefault();
+  if (!saveSyncConfigFromForm()) return;
+  await pushToCloud({ silent: false });
+}
+
+function saveSyncConfigFromForm() {
   syncConfig = {
     url: document.querySelector("#syncUrl").value.trim().replace(/\/+$/, ""),
     key: document.querySelector("#syncKey").value.trim(),
@@ -396,11 +405,12 @@ async function saveSyncSettings(event) {
 
   if (!isSyncReady()) {
     setSyncMessage("请先填完整同步信息");
-    return;
+    return false;
   }
 
   localStorage.setItem(syncStorageKey, JSON.stringify(syncConfig));
-  await pushToCloud({ silent: false });
+  updateSyncStatus();
+  return true;
 }
 
 function clearSyncSettings() {
