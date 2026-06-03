@@ -494,7 +494,7 @@ function scheduleCloudPush() {
     return;
   }
   window.clearTimeout(syncTimer);
-  syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 700);
+  syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 120);
 }
 
 function refreshFromCloud() {
@@ -549,6 +549,11 @@ async function pushToCloud({ silent } = { silent: true }) {
 
 async function pullFromCloud({ silent } = { silent: true }) {
   if (!isSyncReady() || syncBusy) return;
+  if (hasUnsyncedLocalChanges) {
+    setSyncMessage("本地改动待上传，已跳过云端覆盖");
+    if (!silent) alert("当前有本地改动还没有上传成功，请先点“上传到云端”，再从云端下载。");
+    return;
+  }
   const pullButton = document.querySelector("#pullSyncBtn");
   const originalText = pullButton?.textContent;
   if (pullButton) {
@@ -563,6 +568,10 @@ async function pullFromCloud({ silent } = { silent: true }) {
     });
     if (!response.ok) throw new Error(await response.text());
     const rows = await response.json();
+    if (hasUnsyncedLocalChanges) {
+      setSyncMessage("本地改动待上传，已跳过云端覆盖");
+      return;
+    }
     if (!rows.length) {
       syncBusy = false;
       await pushToCloud({ silent: true });
