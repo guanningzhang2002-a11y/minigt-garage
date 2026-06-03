@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MINIGT 收藏追踪</title>
+    <meta name="theme-color" content="#b3222a" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <img src="assets/collection-hero-clean.png" alt="MINIGT 收藏展示场景" />
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <p class="eyebrow">MINIGT COLLECTION GARAGE</p>
+          <h1>我的 MINIGT 车库</h1>
+          <div class="hero-actions">
+            <button class="primary" id="focusFormBtn" type="button">+ 新增车辆</button>
+            <button class="secondary" id="exportBtn" type="button">导出 CSV</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="收藏统计">
+        <article class="stat-panel">
+          <span>总数量</span>
+          <strong id="totalQty">0</strong>
+        </article>
+        <article class="stat-panel">
+          <span>车型种类</span>
+          <strong id="totalItems">0</strong>
+        </article>
+        <article class="stat-panel">
+          <span>现货数量</span>
+          <strong id="ownedQty">0</strong>
+        </article>
+        <article class="stat-panel">
+          <span>预购中</span>
+          <strong id="preorderQty">0</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <section class="inventory-panel">
+          <div class="toolbar">
+            <div class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索编号、车型、版本、备注" />
+            </div>
+            <select id="statusFilter" aria-label="按状态筛选">
+              <option value="all">全部状态</option>
+            </select>
+            <select id="viewSelect" aria-label="显示方式">
+              <option value="table">列表</option>
+              <option value="photo">陈列</option>
+            </select>
+            <select id="sortSelect" aria-label="排序">
+              <option value="number-desc">编号从高到低</option>
+              <option value="number-asc">编号从低到高</option>
+              <option value="model-asc">车型 A-Z</option>
+              <option value="status-asc">状态 A-Z</option>
+            </select>
+          </div>
+
+          <div class="status-summary" id="statusSummary"></div>
+          <div id="inventoryView"></div>
+          <p class="empty-state" id="emptyState">没有匹配的车辆记录。</p>
+        </section>
+      </section>
+    </main>
+
+    <div class="edit-modal" id="addModal" aria-hidden="true">
+      <div class="edit-dialog compact-dialog" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+        <div class="edit-head">
+          <div>
+            <p>MINIGT GARAGE</p>
+            <h2 id="addTitle">记录车辆</h2>
+          </div>
+          <button class="icon-btn" id="closeAddBtn" type="button" title="关闭">×</button>
+        </div>
+        <form id="carForm">
+          <input type="hidden" id="carId" />
+          <label>
+            编号
+            <input id="number" inputmode="numeric" required placeholder="例如：1304" />
+          </label>
+          <div class="quick-match" id="quickMatch"></div>
+          <fieldset class="status-field">
+            <legend>状态</legend>
+            <label>
+              <input type="radio" name="quickStatus" value="入库" checked />
+              <span>入库</span>
+            </label>
+            <label>
+              <input type="radio" name="quickStatus" value="预购" />
+              <span>预购</span>
+            </label>
+          </fieldset>
+          <fieldset class="status-field">
+            <legend>包装</legend>
+            <label>
+              <input type="radio" name="packageType" value="盒装" checked />
+              <span>盒装</span>
+            </label>
+            <label>
+              <input type="radio" name="packageType" value="挂卡" />
+              <span>挂卡</span>
+            </label>
+          </fieldset>
+          <label>
+            数量
+            <input id="quantity" type="number" min="1" step="1" value="1" required />
+          </label>
+          <label>
+            额外备注
+            <textarea id="note" rows="3" placeholder="例如：缺盒、已开封"></textarea>
+          </label>
+          <button class="primary wide" type="submit" id="saveBtn">保存记录</button>
+        </form>
+
+        <div class="utility-actions">
+          <label class="import-btn">
+            导入 CSV
+            <input id="importFile" type="file" accept=".csv,text/csv" />
+          </label>
+          <button class="secondary" id="restoreSeedBtn" type="button">恢复初始数据</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-modal" id="editModal" aria-hidden="true">
+      <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+        <div class="edit-head">
+          <div>
+            <p id="editNumber"></p>
+            <h2 id="editTitle">编辑收藏</h2>
+          </div>
+          <button class="icon-btn" id="closeEditBtn" type="button" title="关闭">×</button>
+        </div>
+        <div class="edit-preview" id="editPreview"></div>
+        <form id="editForm">
+          <input type="hidden" id="editId" />
+          <input type="hidden" id="editImageUrl" />
+          <div class="image-picker" id="editImagePicker"></div>
+          <fieldset class="status-field">
+            <legend>包装</legend>
+            <label>
+              <input type="radio" name="editPackageType" value="盒装" checked />
+              <span>盒装</span>
+            </label>
+            <label>
+              <input type="radio" name="editPackageType" value="挂卡" />
+              <span>挂卡</span>
+            </label>
+          </fieldset>
+          <label>
+            数量
+            <input id="editQuantity" type="number" min="1" step="1" value="1" required />
+          </label>
+          <label>
+            额外备注
+            <textarea id="editNote" rows="3" placeholder="例如：缺盒、已开封"></textarea>
+          </label>
+          <div class="edit-actions">
+            <button class="danger" id="deleteEditBtn" type="button">从收藏中删除</button>
+            <button class="primary" type="submit">保存修改</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="hover-preview" id="hoverPreview" aria-hidden="true"></div>
+    <script src="assets/minigt-catalog.js"></script>
+    <script src="assets/minigt-image-candidates.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

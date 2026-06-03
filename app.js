@@ -1,0 +1,1123 @@
+const knownProductUrls = {
+  "743": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1445",
+  "823": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1849",
+  "855": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1563",
+  "895": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1624",
+  "985": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1707",
+  "1062": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1840",
+  "1052": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1845",
+  "1100": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2015",
+  "1081": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2007",
+  "392": "https://minigt.tsm-models.com/index.php?action=product-detail&id=392",
+  "1022": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1859",
+  "1087": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1863",
+  "1054": "https://minigt.tsm-models.com/index.php?action=product-detail&id=1831",
+  "1129": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2018",
+  "1143": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2057",
+  "1250": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2240",
+  "1251": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2242",
+  "1249": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2224",
+  "1248": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2223",
+  "1239": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2219",
+  "1238": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2218",
+  "1237": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2217",
+  "1226": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2167",
+  "1222": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2163",
+  "1218": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2197",
+  "1304": "https://minigt.tsm-models.com/index.php?action=product-search&keywords=MGT01304"
+};
+
+const knownImageUrls = {
+  "743": "https://minigt.tsm-models.com/upload/picfile/2024/09/20240930075132911.jpg",
+  "823": "https://minigt.tsm-models.com/upload/picfile/2025/11/20251122091625891.JPG",
+  "855": "https://minigt.tsm-models.com/upload/picfile/2025/05/20250506204456477.JPG",
+  "895": "https://minigt.tsm-models.com/upload/picfile/2025/04/20250409213910782.jpg",
+  "985": "https://minigt.tsm-models.com/upload/picfile/2025/03/20250319195118437.jpg",
+  "1062": "https://minigt.tsm-models.com/upload/picfile/2025/12/20251212050014206.JPG",
+  "1052": "https://minigt.tsm-models.com/upload/picfile/2025/12/20251207195254592.JPG",
+  "1100": "https://minigt.tsm-models.com/upload/picfile_list/42cf998f839e657ac7c175a197185cd720251203051825550.JPG",
+  "1081": "https://minigt.tsm-models.com/upload/picfile/2025/11/20251122090005338.JPG",
+  "392": "https://minigt.tsm-models.com/upload/picfile/2025/05/20250508194340908.JPG",
+  "1022": "https://minigt.tsm-models.com/upload/picfile_list/422834d9d43b33e63ac3f5205cb6881a20250729212947599.JPG",
+  "1087": "https://minigt.tsm-models.com/upload/picfile/2025/07/20250729213708679.JPG",
+  "1054": "https://minigt.tsm-models.com/upload/picfile/2025/11/20251123041518292.JPG",
+  "1129": "https://minigt.tsm-models.com/upload/picfile_list/9bb8510e44ac36716751b4e32722c7af20260519182712085.JPG",
+  "1143": "https://minigt.tsm-models.com/upload/picfile_list/1157a337f7c556c79f87841e4b32454220260106205322244.JPG",
+  "1250": "https://minigt.tsm-models.com/upload/picfile_list/d82b7c9191bd841a5d844ef0101563f520260531213717666.jpg",
+  "1251": "https://minigt.tsm-models.com/upload/picfile_list/115ef85ff9c6b235777531493292918c20260531214704918.JPG",
+  "1249": "https://minigt.tsm-models.com/upload/picfile/2026/05/20260515175127911.JPG",
+  "1248": "https://minigt.tsm-models.com/upload/picfile/2026/05/20260515174631142.JPG",
+  "1239": "https://minigt.tsm-models.com/upload/picfile/2026/05/20260502050319983.JPG",
+  "1238": "https://minigt.tsm-models.com/upload/picfile/2026/05/20260502045653640.JPG",
+  "1237": "https://minigt.tsm-models.com/upload/picfile/2026/05/20260502044943271.JPG",
+  "1226": "https://minigt.tsm-models.com/upload/picfile/2026/04/20260403182649303.JPG",
+  "1222": "https://minigt.tsm-models.com/upload/picfile/2026/04/20260403180246162.JPG",
+  "1218": "https://minigt.tsm-models.com/upload/picfile/2026/04/20260416181740150.JPG"
+};
+
+const knownOfficialDetails = {
+  "743": { model: "Nissan LB-Super Silhouette S15 SILVIA", variant: "LBWK KUMA" },
+  "823": { model: "Nissan LB-Super Silhouette S15 SILVIA", variant: "#555 V2 / 2024 Formula Drift Japan" },
+  "855": { model: "Nissan Silvia (S15) D-MAX", variant: "#70 / D-MAX Racing / 2023 D1 Grand Prix" },
+  "895": { model: "Nissan LB-Super Silhouette S15 SILVIA", variant: "#555 / 2023 Formula Drift Japan" },
+  "985": { model: "Nissan Z VeilSide FFZ400", variant: "Gold Chrome" },
+  "1062": { model: "Lamborghini Huracan GT3 EVO2 #78", variant: "Forte Racing / 2024 IMSA Daytona 24 Hrs" },
+  "1052": { model: "Porsche 911 GT3 R #77", variant: "AO Racing / 2024 IMSA Road America" },
+  "1100": { model: "Lamborghini Countach LB-WORKS", variant: "Red" },
+  "1081": { model: "Lamborghini Countach LB-WORKS", variant: "Black" },
+  "392": { model: "Mazda Miata MX-5 (NA)", variant: "Sunburst Yellow" },
+  "1022": { model: "Nissan LB-Super Silhouette S15 SILVIA", variant: "GARASIDRIFT x LBWK 2025" },
+  "1087": { model: "LB-WORKS Lamborghini Aventador", variant: "Limited Edition Matte Black" },
+  "1054": { model: "Nissan LB-Super Silhouette S15 SILVIA", variant: "ATHLETE" },
+  "1129": { model: "Lamborghini Huracan GT3 EVO2 #45", variant: "DEX Imaging / 2024 IMSA Daytona 24 Hrs" },
+  "1143": { model: "Porsche 911 GT3 R #77", variant: "AO Racing / 2025 IMSA Petit Le Mans" },
+  "1250": { model: "Toyota Supra BOMEX", variant: "Fast & Furious / Brian O'Conner" },
+  "1251": { model: "Mazda RX-7 VeilSide Fortune", variant: "Fast & Furious Tokyo Drift / Han Seoul-Oh" },
+  "1249": { model: "Mazda MX-5 (NA) Pandem", variant: "Mint Green" },
+  "1248": { model: "Nissan LB-Silhouette WORKS GT 35GT-RR", variant: "Ver.1 Matt Grey" },
+  "1239": { model: "Nissan SILVIA (S15) LB-Super Silhouette", variant: "AMOCULTURE" },
+  "1238": { model: "Nissan Skyline GT-R (R32)", variant: "LBWK Kaido Works AMOCULTURE" },
+  "1237": { model: "Toyota GR Supra LB-WORKS", variant: "AMOCULTURE" },
+  "1226": { model: "LB-WORKS Lamborghini Huracan GT", variant: "Street Customs" },
+  "1222": { model: "Mazda Miata MX-5 (ND) Pandem", variant: "IMSA White" },
+  "1218": { model: "Porsche 911 GT3 R (992) #77", variant: "AO Racing / 2025 IMSA Sebring 12 Hrs Class Winner" }
+};
+
+const seedInventory = [
+  { id: 1, status: "加拿大已购", number: "743", model: "Nissan S15 Silvia LB-Super Silhouette", variant: "LBWK KUMA", quantity: 1, note: "", productUrl: "https://www.sunrich.jp/SHOP/MGT00743-R.html" },
+  { id: 2, status: "加拿大已购", number: "823", model: "Nissan S15 Silvia LB-Super Silhouette", variant: "#555 V2 / 2024 Formula Drift Japan", quantity: 1, note: "" },
+  { id: 3, status: "加拿大已购", number: "855", model: "Nissan Silvia S15 D-MAX", variant: "#70 / 2023 D1 Grand Prix", quantity: 1, note: "" },
+  { id: 4, status: "加拿大已购", number: "895", model: "Nissan S15 Silvia LB-Super Silhouette", variant: "#555 / 2023 Formula Drift Japan", quantity: 1, note: "" },
+  { id: 5, status: "加拿大已购", number: "985", model: "Nissan Z VeilSide FFZ400", variant: "Gold Chrome", quantity: 1, note: "" },
+  { id: 6, status: "加拿大已购", number: "1062", model: "Lamborghini Huracan GT3 EVO2 #78", variant: "2024 IMSA Daytona 24 Hrs Frote Racing", quantity: 1, note: "" },
+  { id: 7, status: "加拿大已购", number: "1052", model: "Porsche 911 GT3 R #77", variant: "2024 IMSA Road America AO Racing", quantity: 1, note: "加一挂卡" },
+  { id: 8, status: "加拿大已购", number: "1100", model: "Lamborghini Countach LB-WORKS", variant: "Red", quantity: 1, note: "" },
+  { id: 9, status: "加拿大已购", number: "1081", model: "Lamborghini Countach LB-WORKS", variant: "Black", quantity: 1, note: "" },
+  { id: 10, status: "加拿大已购", number: "392", model: "Mazda Miata MX-5 NA", variant: "Sunburst Yellow", quantity: 1, note: "" },
+  { id: 11, status: "加拿大已购", number: "1022", model: "Nissan S15 Silvia LB-Super Silhouette", variant: "GARASIDRIFT x LBWK 2025 / RHD / Blister Pack", quantity: 1, note: "" },
+  { id: 12, status: "大连已收", number: "1087", model: "Lamborghini Aventador LB-WORKS", variant: "Limited Edition Matte Black", quantity: 1, note: "" },
+  { id: 13, status: "大连已收", number: "1054", model: "Nissan S15 Silvia LB-Super Silhouette", variant: "ATHLETE White", quantity: 1, note: "" },
+  { id: 14, status: "拼多多预购", number: "1129", model: "Lamborghini Huracán GT3 EVO2 #45", variant: "DEX Imaging / 2024 IMSA Daytona 24 Hrs", quantity: 1, note: "" },
+  { id: 15, status: "拼多多预购", number: "1143", model: "Porsche 911 GT3 R #77", variant: "AO Racing Skeleton", quantity: 1, note: "" },
+  { id: 16, status: "拼多多预购", number: "1250", model: "Toyota Supra BOMEX", variant: "Fast & Furious / Brian O'Conner", quantity: 1, note: "" },
+  { id: 17, status: "拼多多预购", number: "1251", model: "Mazda RX-7 VeilSide Fortune", variant: "Fast & Furious Tokyo Drift / Han Seoul-Oh", quantity: 1, note: "" },
+  { id: 18, status: "拼多多预购", number: "1249", model: "Mazda MX-5 NA Pandem", variant: "Mint Green", quantity: 1, note: "" },
+  { id: 19, status: "拼多多预购", number: "1304", model: "Porsche 911 GT3 RS Weissach Package", variant: "Gulf Orange", quantity: 1, note: "", productUrl: "https://downskale.com/products/mini-gt-porsche-911-992-gt3-rs-weissach-package-gulf-orange" },
+  { id: 20, status: "拼多多预购", number: "1248", model: "Nissan LB-Silhouette WORKS GT 35GT-RR", variant: "Ver.1 Matte Grey", quantity: 1, note: "" },
+  { id: 21, status: "拼多多预购", number: "1239", model: "Nissan Silvia S15 LB-Super Silhouette", variant: "AMOCULTURE", quantity: 1, note: "" },
+  { id: 22, status: "拼多多预购", number: "1238", model: "Nissan Skyline GT-R R32", variant: "LBWK Kaido Works AMOCULTURE", quantity: 1, note: "" },
+  { id: 23, status: "拼多多预购", number: "1237", model: "Toyota GR Supra LB Works", variant: "AMOCULTURE", quantity: 1, note: "" },
+  { id: 24, status: "拼多多预购", number: "1226", model: "Lamborghini Huracán GT", variant: "Street Customs", quantity: 1, note: "" },
+  { id: 25, status: "拼多多预购", number: "1222", model: "Mazda Miata MX-5 ND Pandem", variant: "IMSA White", quantity: 1, note: "" },
+  { id: 26, status: "拼多多预购", number: "1218", model: "Porsche 911 GT3 R 992 #77", variant: "AO Racing / 2025 IMSA Sebring 12 Hrs Class Winner", quantity: 1, note: "" }
+].map(normalizeItem);
+
+const storageKey = "minigt-inventory-v1";
+const syncStorageKey = "minigt-sync-v1";
+const syncTable = "minigt_collections";
+let inventory = loadInventory();
+let syncConfig = loadSyncConfig();
+let syncTimer = null;
+let syncBusy = false;
+
+const fields = {
+  id: document.querySelector("#carId"),
+  number: document.querySelector("#number"),
+  quantity: document.querySelector("#quantity"),
+  note: document.querySelector("#note")
+};
+
+const els = {
+  form: document.querySelector("#carForm"),
+  view: document.querySelector("#inventoryView"),
+  empty: document.querySelector("#emptyState"),
+  search: document.querySelector("#searchInput"),
+  statusFilter: document.querySelector("#statusFilter"),
+  viewSelect: document.querySelector("#viewSelect"),
+  sort: document.querySelector("#sortSelect"),
+  statusSummary: document.querySelector("#statusSummary"),
+  quickMatch: document.querySelector("#quickMatch"),
+  totalQty: document.querySelector("#totalQty"),
+  totalItems: document.querySelector("#totalItems"),
+  ownedQty: document.querySelector("#ownedQty"),
+  preorderQty: document.querySelector("#preorderQty"),
+  saveBtn: document.querySelector("#saveBtn"),
+  importFile: document.querySelector("#importFile"),
+  preview: document.querySelector("#hoverPreview"),
+  editModal: document.querySelector("#editModal"),
+  editForm: document.querySelector("#editForm"),
+  editId: document.querySelector("#editId"),
+  editNumber: document.querySelector("#editNumber"),
+  editTitle: document.querySelector("#editTitle"),
+  editPreview: document.querySelector("#editPreview"),
+  editImageUrl: document.querySelector("#editImageUrl"),
+  editImagePicker: document.querySelector("#editImagePicker"),
+  editQuantity: document.querySelector("#editQuantity"),
+  editNote: document.querySelector("#editNote"),
+  addModal: document.querySelector("#addModal")
+};
+
+injectSyncUi();
+
+document.querySelector("#focusFormBtn").addEventListener("click", openAddModal);
+document.querySelector("#closeAddBtn").addEventListener("click", closeAddModal);
+document.querySelector("#restoreSeedBtn").addEventListener("click", restoreSeed);
+document.querySelector("#exportBtn").addEventListener("click", exportCsv);
+els.form.addEventListener("submit", saveCar);
+fields.number.addEventListener("input", renderQuickMatch);
+els.search.addEventListener("input", render);
+els.statusFilter.addEventListener("change", render);
+els.viewSelect.addEventListener("change", render);
+els.sort.addEventListener("change", render);
+els.importFile.addEventListener("change", importCsv);
+els.editForm.addEventListener("submit", saveEdit);
+document.querySelector("#closeEditBtn").addEventListener("click", closeEditModal);
+document.querySelector("#deleteEditBtn").addEventListener("click", deleteFromEdit);
+els.editModal.addEventListener("click", (event) => {
+  if (event.target === els.editModal) closeEditModal();
+});
+els.addModal.addEventListener("click", (event) => {
+  if (event.target === els.addModal) closeAddModal();
+});
+document.addEventListener("mousemove", movePreview);
+document.addEventListener("mouseover", showPreview);
+document.addEventListener("mouseout", hidePreview);
+
+persist();
+renderQuickMatch();
+render();
+updateSyncStatus();
+if (isSyncReady()) {
+  pullFromCloud({ silent: true });
+}
+registerServiceWorker();
+
+function loadInventory() {
+  const saved = localStorage.getItem(storageKey);
+  if (!saved) return structuredClone(seedInventory);
+
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed.map(normalizeItem) : structuredClone(seedInventory);
+  } catch {
+    return structuredClone(seedInventory);
+  }
+}
+
+function loadSyncConfig() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(syncStorageKey) || "{}");
+    return {
+      url: String(parsed.url || "").replace(/\/+$/, ""),
+      key: String(parsed.key || ""),
+      owner: String(parsed.owner || "")
+    };
+  } catch {
+    return { url: "", key: "", owner: "" };
+  }
+}
+
+function normalizeItem(item) {
+  const number = String(item.number || "").replace(/\D/g, "");
+  const catalogItem = getCatalogItem(number);
+  const migrated = migrateStatusAndNote(item.status || "", item.note || "");
+  const normalized = {
+    id: Number(item.id) || Date.now(),
+    status: migrated.status,
+    number,
+    model: item.model || "",
+    variant: "",
+    quantity: Math.max(1, Number(item.quantity || 1)),
+    price: item.price || "",
+    imageUrl: item.imageUrl || "",
+    productUrl: item.productUrl || "",
+    note: migrated.note,
+    packageType: item.packageType || inferPackageType(migrated.note),
+    inGarage: item.inGarage !== false
+  };
+  if (catalogItem) {
+    normalized.model = catalogItem.title;
+    if (catalogItem.imageUrl && (!normalized.imageUrl || catalogItem.imageUrl.includes("picfile_list"))) {
+      normalized.imageUrl = catalogItem.imageUrl;
+    }
+    normalized.productUrl = normalized.productUrl || catalogItem.productUrl || "";
+  }
+  if (knownProductUrls[normalized.number] && (!normalized.productUrl || !normalized.productUrl.includes("minigt.tsm-models.com"))) {
+    normalized.productUrl = knownProductUrls[normalized.number];
+  }
+  if (knownImageUrls[normalized.number] && (!normalized.imageUrl || knownImageUrls[normalized.number].includes("picfile_list"))) {
+    normalized.imageUrl = knownImageUrls[normalized.number];
+  }
+  if (knownOfficialDetails[normalized.number]) {
+    normalized.model = `${knownOfficialDetails[normalized.number].model} ${knownOfficialDetails[normalized.number].variant}`.trim();
+  }
+  if (!normalized.model) {
+    normalized.model = `MINI GT #${normalized.number || "未编号"}`;
+  }
+  return normalized;
+}
+
+function migrateStatusAndNote(status, note) {
+  const parts = String(note || "")
+    .split("；")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (status === "拼多多预购" || status === "预购") {
+    return { status: "预购", note: parts.join("；") };
+  }
+
+  if (status === "加拿大已购") {
+    if (!parts.includes("加拿大")) parts.unshift("加拿大");
+    return { status: "入库", note: parts.join("；") };
+  }
+
+  if (status === "大连已收") {
+    if (!parts.includes("大连")) parts.unshift("大连");
+    return { status: "入库", note: parts.join("；") };
+  }
+
+  if (status === "现货" || status === "现货入库" || status === "入库") {
+    return { status: "入库", note: parts.join("；") };
+  }
+
+  return { status: status || "入库", note: parts.join("；") };
+}
+
+function getCatalogItem(number) {
+  if (!number || !window.MINIGT_CATALOG) return null;
+  return window.MINIGT_CATALOG[number] || null;
+}
+
+function inferPackageType(note) {
+  return String(note || "").includes("挂卡") ? "挂卡" : "盒装";
+}
+
+function persist() {
+  localStorage.setItem(storageKey, JSON.stringify(inventory));
+  scheduleCloudPush();
+}
+
+function injectSyncUi() {
+  const actions = document.querySelector(".hero-actions");
+  if (actions && !document.querySelector("#syncBtn")) {
+    const button = document.createElement("button");
+    button.className = "secondary";
+    button.id = "syncBtn";
+    button.type = "button";
+    button.textContent = "云同步";
+    const exportButton = document.querySelector("#exportBtn");
+    actions.insertBefore(button, exportButton || null);
+  }
+
+  const heroContent = document.querySelector(".hero-content");
+  if (heroContent && !document.querySelector("#syncStatus")) {
+    const status = document.createElement("p");
+    status.className = "sync-status";
+    status.id = "syncStatus";
+    status.textContent = "本机数据";
+    heroContent.append(status);
+  }
+
+  if (!document.querySelector("#syncModal")) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="edit-modal" id="syncModal" aria-hidden="true">
+        <div class="edit-dialog sync-dialog" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+          <div class="edit-head">
+            <div>
+              <p>PHONE SYNC</p>
+              <h2 id="syncTitle">手机同步设置</h2>
+            </div>
+            <button class="icon-btn" id="closeSyncBtn" type="button" title="关闭">×</button>
+          </div>
+          <div class="sync-copy">
+            <p>把 Supabase 项目的 URL 和 anon key 填到这里。手机和电脑打开同一个网站，并填写同一个同步密码，就会使用同一份收藏数据。</p>
+          </div>
+          <form id="syncForm">
+            <label>
+              Supabase Project URL
+              <input id="syncUrl" type="url" placeholder="https://xxxx.supabase.co" />
+            </label>
+            <label>
+              Supabase anon public key
+              <textarea id="syncKey" rows="3" placeholder="eyJhbGciOi..."></textarea>
+            </label>
+            <label>
+              同步密码
+              <input id="syncOwner" type="password" placeholder="自己设置一个密码，手机电脑填一样" />
+            </label>
+            <button class="primary wide" type="submit">保存并上传当前数据</button>
+          </form>
+          <div class="sync-actions">
+            <button class="secondary" id="pullSyncBtn" type="button">从云端下载</button>
+            <button class="secondary" id="pushSyncBtn" type="button">上传到云端</button>
+            <button class="danger" id="clearSyncBtn" type="button">关闭同步</button>
+          </div>
+          <p class="sync-help">第一次使用前，把项目里的 supabase-setup.sql 复制到 Supabase SQL Editor 运行一次。</p>
+        </div>
+      </div>
+    `);
+  }
+
+  document.querySelector("#syncBtn")?.addEventListener("click", openSyncModal);
+  document.querySelector("#closeSyncBtn")?.addEventListener("click", closeSyncModal);
+  document.querySelector("#syncModal")?.addEventListener("click", (event) => {
+    if (event.target === document.querySelector("#syncModal")) closeSyncModal();
+  });
+  document.querySelector("#syncForm")?.addEventListener("submit", saveSyncSettings);
+  document.querySelector("#pullSyncBtn")?.addEventListener("click", () => pullFromCloud({ silent: false }));
+  document.querySelector("#pushSyncBtn")?.addEventListener("click", () => pushToCloud({ silent: false }));
+  document.querySelector("#clearSyncBtn")?.addEventListener("click", clearSyncSettings);
+}
+
+function openSyncModal() {
+  document.querySelector("#syncUrl").value = syncConfig.url || "";
+  document.querySelector("#syncKey").value = syncConfig.key || "";
+  document.querySelector("#syncOwner").value = syncConfig.owner || "";
+  const modal = document.querySelector("#syncModal");
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+  document.querySelector("#syncUrl").focus();
+}
+
+function closeSyncModal() {
+  const modal = document.querySelector("#syncModal");
+  modal.classList.remove("visible");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+async function saveSyncSettings(event) {
+  event.preventDefault();
+  syncConfig = {
+    url: document.querySelector("#syncUrl").value.trim().replace(/\/+$/, ""),
+    key: document.querySelector("#syncKey").value.trim(),
+    owner: document.querySelector("#syncOwner").value.trim()
+  };
+
+  if (!isSyncReady()) {
+    setSyncMessage("请先填完整同步信息");
+    return;
+  }
+
+  localStorage.setItem(syncStorageKey, JSON.stringify(syncConfig));
+  await pushToCloud({ silent: false });
+}
+
+function clearSyncSettings() {
+  localStorage.removeItem(syncStorageKey);
+  syncConfig = { url: "", key: "", owner: "" };
+  updateSyncStatus();
+  closeSyncModal();
+}
+
+function isSyncReady() {
+  return Boolean(syncConfig.url && syncConfig.key && syncConfig.owner);
+}
+
+function syncHeaders(extra = {}) {
+  return {
+    apikey: syncConfig.key,
+    Authorization: `Bearer ${syncConfig.key}`,
+    "x-owner-key": ownerKey(),
+    "Content-Type": "application/json",
+    ...extra
+  };
+}
+
+function syncEndpoint(query = "") {
+  return `${syncConfig.url}/rest/v1/${syncTable}${query}`;
+}
+
+function ownerKey() {
+  const bytes = new TextEncoder().encode(syncConfig.owner);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function scheduleCloudPush() {
+  if (!isSyncReady()) {
+    updateSyncStatus();
+    return;
+  }
+  window.clearTimeout(syncTimer);
+  syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 700);
+}
+
+async function pushToCloud({ silent } = { silent: true }) {
+  if (!isSyncReady() || syncBusy) return;
+  syncBusy = true;
+  setSyncMessage("正在上传云端...");
+  try {
+    const response = await fetch(syncEndpoint("?on_conflict=owner_key"), {
+      method: "POST",
+      headers: syncHeaders({ Prefer: "resolution=merge-duplicates" }),
+      body: JSON.stringify({
+        owner_key: ownerKey(),
+        data: inventory
+      })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    setSyncMessage(`已同步 ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    if (!silent) closeSyncModal();
+  } catch (error) {
+    setSyncMessage("同步失败，请检查 Supabase 设置");
+    if (!silent) alert(`同步失败：${error.message}`);
+  } finally {
+    syncBusy = false;
+  }
+}
+
+async function pullFromCloud({ silent } = { silent: true }) {
+  if (!isSyncReady() || syncBusy) return;
+  syncBusy = true;
+  setSyncMessage("正在读取云端...");
+  try {
+    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at`), {
+      headers: syncHeaders()
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const rows = await response.json();
+    if (!rows.length) {
+      syncBusy = false;
+      await pushToCloud({ silent: true });
+      return;
+    }
+    inventory = Array.isArray(rows[0].data) ? rows[0].data.map(normalizeItem) : inventory;
+    localStorage.setItem(storageKey, JSON.stringify(inventory));
+    render();
+    setSyncMessage(`已读取云端 ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    if (!silent) closeSyncModal();
+  } catch (error) {
+    setSyncMessage("读取失败，请检查 Supabase 设置");
+    if (!silent) alert(`读取失败：${error.message}`);
+  } finally {
+    syncBusy = false;
+  }
+}
+
+function updateSyncStatus() {
+  setSyncMessage(isSyncReady() ? "云同步已开启" : "本机数据");
+}
+
+function setSyncMessage(message) {
+  const status = document.querySelector("#syncStatus");
+  if (status) status.textContent = message;
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  if (location.protocol === "file:") return;
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+function saveCar(event) {
+  event.preventDefault();
+
+  const record = normalizeItem({
+    id: fields.id.value ? Number(fields.id.value) : Date.now(),
+    status: getQuickStatus(),
+    number: fields.number.value.trim(),
+    quantity: fields.quantity.value,
+    note: fields.note.value.trim(),
+    packageType: getPackageType(),
+    inGarage: true
+  });
+
+  const index = inventory.findIndex((item) => item.id === record.id);
+  if (index >= 0) inventory[index] = record;
+  else inventory.unshift(record);
+
+  persist();
+  resetForm();
+  render();
+  closeAddModal();
+}
+
+function resetForm() {
+  els.form.reset();
+  fields.id.value = "";
+  fields.quantity.value = 1;
+  setQuickStatus("入库");
+  setPackageType("盒装");
+  els.saveBtn.textContent = "保存记录";
+  renderQuickMatch();
+}
+
+function openAddModal() {
+  resetForm();
+  els.addModal.classList.add("visible");
+  els.addModal.setAttribute("aria-hidden", "false");
+  fields.number.focus();
+}
+
+function closeAddModal() {
+  els.addModal.classList.remove("visible");
+  els.addModal.setAttribute("aria-hidden", "true");
+}
+
+function editCar(id) {
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+
+  els.editId.value = item.id;
+  els.editNumber.textContent = `#${item.number}`;
+  els.editTitle.textContent = item.model;
+  els.editQuantity.value = item.quantity || 1;
+  els.editNote.value = item.note || "";
+  setEditPackageType(item.packageType || "盒装");
+  els.editPreview.innerHTML = `
+    <img src="${escapeHtml(carImage(item))}" alt="${escapeHtml(item.model)}" />
+    <div>
+      <strong>${escapeHtml(item.status)}</strong>
+      <span>${escapeHtml(item.packageType || "盒装")} · 数量 ${Number(item.quantity || 0)}</span>
+    </div>
+  `;
+  els.editImageUrl.value = carImage(item);
+  renderImagePicker(item);
+  els.editModal.classList.add("visible");
+  els.editModal.setAttribute("aria-hidden", "false");
+  els.editQuantity.focus();
+}
+
+function deleteCar(id) {
+  inventory = inventory.filter((entry) => entry.id !== id);
+  persist();
+  render();
+}
+
+function manageGroup(id) {
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+  const sameNumber = inventory.filter((entry) => entry.number === item.number);
+  const firstEditable = sameNumber[0];
+  editCar(firstEditable.id);
+}
+
+function deleteGroup(id) {
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+  inventory = inventory.filter((entry) => entry.number !== item.number);
+  persist();
+  render();
+}
+
+function saveEdit(event) {
+  event.preventDefault();
+  const id = Number(els.editId.value);
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+
+  const originalNumber = item.number;
+  const originalPackage = item.packageType || "盒装";
+  const nextPackage = getEditPackageType();
+
+  item.quantity = Math.max(1, Number(els.editQuantity.value || 1));
+  item.packageType = nextPackage;
+  item.note = els.editNote.value.trim();
+  const selectedImage = els.editImageUrl.value.trim();
+  if (selectedImage) {
+    inventory.forEach((entry) => {
+      if (entry.number === item.number) entry.imageUrl = selectedImage;
+    });
+  }
+  inventory = inventory.filter((entry) => {
+    if (entry.id === item.id || entry.number !== originalNumber) return true;
+    const packageType = entry.packageType || "盒装";
+    return packageType !== nextPackage && packageType !== originalPackage;
+  });
+  persist();
+  closeEditModal();
+  render();
+}
+
+function deleteFromEdit() {
+  const id = Number(els.editId.value);
+  deleteCar(id);
+  closeEditModal();
+}
+
+function closeEditModal() {
+  els.editModal.classList.remove("visible");
+  els.editModal.setAttribute("aria-hidden", "true");
+}
+
+function renderImagePicker(item) {
+  const urls = imageCandidates(item);
+  if (!urls.length) {
+    els.editImagePicker.innerHTML = "";
+    return;
+  }
+
+  els.editImagePicker.innerHTML = `
+    <p>展示图片</p>
+    <div class="image-choice-grid">
+      ${urls.map((url) => `
+        <button class="${url === carImage(item) ? "selected" : ""}" type="button" data-image-url="${escapeHtml(url)}">
+          <img src="${escapeHtml(url)}" alt="${escapeHtml(item.model)}" />
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  els.editImagePicker.querySelectorAll("button[data-image-url]").forEach((button) => {
+    button.addEventListener("click", () => {
+      els.editImageUrl.value = button.dataset.imageUrl;
+      els.editPreview.querySelector("img").src = button.dataset.imageUrl;
+      els.editImagePicker.querySelectorAll("button").forEach((itemButton) => itemButton.classList.remove("selected"));
+      button.classList.add("selected");
+    });
+  });
+}
+
+function imageCandidates(item) {
+  const fromReport = window.MINIGT_IMAGE_CANDIDATES?.[item.number] || [];
+  const urls = [carImage(item), knownImageUrls[item.number], getCatalogItem(item.number)?.imageUrl, ...fromReport].filter(Boolean);
+  return [...new Set(urls)];
+}
+
+function getQuickStatus() {
+  return document.querySelector("input[name='quickStatus']:checked")?.value || "入库";
+}
+
+function setQuickStatus(status) {
+  const value = status.includes("预购") ? "预购" : "入库";
+  const input = document.querySelector(`input[name='quickStatus'][value='${value}']`);
+  if (input) input.checked = true;
+}
+
+function getPackageType() {
+  return document.querySelector("input[name='packageType']:checked")?.value || "盒装";
+}
+
+function setPackageType(packageType) {
+  const value = packageType === "挂卡" ? "挂卡" : "盒装";
+  const input = document.querySelector(`input[name='packageType'][value='${value}']`);
+  if (input) input.checked = true;
+}
+
+function getEditPackageType() {
+  return document.querySelector("input[name='editPackageType']:checked")?.value || "盒装";
+}
+
+function setEditPackageType(packageType) {
+  const value = packageType === "挂卡" ? "挂卡" : "盒装";
+  const input = document.querySelector(`input[name='editPackageType'][value='${value}']`);
+  if (input) input.checked = true;
+}
+
+function renderQuickMatch() {
+  const number = fields.number.value.replace(/\D/g, "");
+  const catalogItem = getCatalogItem(number);
+  const known = knownOfficialDetails[number];
+  const imageUrl = catalogItem?.imageUrl || knownImageUrls[number] || "";
+  const title = catalogItem?.title || (known ? `${known.model} ${known.variant}`.trim() : "");
+
+  if (!number) {
+    els.quickMatch.innerHTML = "";
+    els.quickMatch.classList.remove("visible");
+    return;
+  }
+
+  if (!catalogItem && !known) {
+    els.quickMatch.innerHTML = `
+      <div class="quick-match-empty">
+        <strong>#${escapeHtml(number)}</strong>
+        <span>本地官网目录暂未匹配，保存后会先用占位图。</span>
+      </div>
+    `;
+    els.quickMatch.classList.add("visible");
+    return;
+  }
+
+  els.quickMatch.innerHTML = `
+    <div class="quick-match-card">
+      <img src="${escapeHtml(imageUrl || generatedCarImage({ number, model: title }))}" alt="${escapeHtml(title)}" />
+      <div>
+        <strong>#${escapeHtml(number)}</strong>
+        <span>${escapeHtml(title)}</span>
+      </div>
+    </div>
+  `;
+  els.quickMatch.classList.add("visible");
+}
+
+function restoreSeed() {
+  inventory = structuredClone(seedInventory);
+  persist();
+  resetForm();
+  render();
+}
+
+function render() {
+  const filtered = filteredInventory();
+  renderStats();
+  renderFilters();
+  renderStatusSummary();
+  renderInventory(filtered);
+}
+
+function filteredInventory() {
+  const query = els.search.value.trim().toLowerCase();
+  const status = els.statusFilter.value;
+
+  return inventory
+    .filter((item) => {
+      const haystack = [item.status, item.number, item.model, item.packageType, item.note].join(" ").toLowerCase();
+      return (!query || haystack.includes(query)) && (status === "all" || item.status === status);
+    })
+    .sort((a, b) => {
+      if (els.sort.value === "number-asc") return numberValue(a.number) - numberValue(b.number);
+      if (els.sort.value === "model-asc") return a.model.localeCompare(b.model);
+      if (els.sort.value === "status-asc") return a.status.localeCompare(b.status);
+      return numberValue(b.number) - numberValue(a.number);
+    });
+}
+
+function numberValue(value) {
+  const parsed = Number(String(value).replace(/\D/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function renderStats() {
+  const totalQty = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const preorderQty = inventory
+    .filter((item) => item.status.includes("预购"))
+    .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const ownedQty = inventory
+    .filter((item) => item.status.includes("入库"))
+    .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+  els.totalQty.textContent = totalQty;
+  els.totalItems.textContent = groupInventory(inventory).length;
+  els.ownedQty.textContent = ownedQty;
+  els.preorderQty.textContent = preorderQty;
+}
+
+function renderFilters() {
+  const statuses = [...new Set(inventory.map((item) => item.status).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const current = els.statusFilter.value;
+  els.statusFilter.innerHTML = `<option value="all">全部状态</option>${statuses.map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`).join("")}`;
+  els.statusFilter.value = statuses.includes(current) ? current : "all";
+}
+
+function renderStatusSummary() {
+  const counts = new Map();
+  inventory.forEach((item) => counts.set(item.status, (counts.get(item.status) || 0) + Number(item.quantity || 0)));
+  els.statusSummary.innerHTML = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([status, count]) => `<span class="summary-pill">${escapeHtml(status || "未分类")} · ${count}</span>`)
+    .join("");
+}
+
+function renderInventory(items) {
+  const grouped = groupInventory(items);
+  els.empty.style.display = grouped.length ? "none" : "block";
+  if (!grouped.length) {
+    els.view.innerHTML = "";
+    return;
+  }
+
+  if (els.viewSelect.value === "photo") renderPhotoGrid(grouped);
+  else renderTable(grouped);
+}
+
+function groupInventory(items) {
+  const groups = new Map();
+  items.forEach((item) => {
+    const key = item.number || String(item.id);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        ...item,
+        ids: [],
+        records: [],
+        quantity: 0,
+        packageSummary: new Map(),
+        noteSummary: []
+      });
+    }
+
+    const group = groups.get(key);
+    group.ids.push(item.id);
+    group.records.push(item);
+    group.quantity += Number(item.quantity || 0);
+    group.packageSummary.set(item.packageType || "盒装", (group.packageSummary.get(item.packageType || "盒装") || 0) + Number(item.quantity || 0));
+    if (item.note && !group.noteSummary.includes(item.note)) group.noteSummary.push(item.note);
+    if (item.status.includes("预购")) group.status = "预购";
+  });
+
+  return [...groups.values()].map((group) => ({
+    ...group,
+    packageText: [...group.packageSummary.entries()].map(([type, count]) => `${type} ${count}`).join(" / "),
+    note: group.noteSummary.join("；")
+  }));
+}
+
+function renderTable(items) {
+  els.view.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>照片</th>
+            <th>状态</th>
+            <th>编号</th>
+            <th>车型</th>
+            <th>包装</th>
+            <th>数量</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(tableRow).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+  bindActionButtons();
+}
+
+function tableRow(item) {
+  return `
+    <tr class="preview-target" data-preview="${escapeHtml(carImage(item))}" data-title="${escapeHtml(item.model)}" data-subtitle="#${escapeHtml(item.number)} · ${escapeHtml(item.packageText || item.packageType)} · 数量 ${Number(item.quantity || 0)}">
+      <td>${imageMarkup(item, "thumb")}</td>
+      <td><span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
+      <td>${escapeHtml(item.number)}</td>
+      <td class="model-cell"><strong>${escapeHtml(item.model)}</strong>${item.productUrl ? `<a href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">产品页</a>` : ""}</td>
+      <td>${escapeHtml(item.packageText || item.packageType)}</td>
+      <td>${Number(item.quantity || 0)}</td>
+      <td>${escapeHtml(item.note || "")}</td>
+      <td>${rowActions(item)}</td>
+    </tr>
+  `;
+}
+
+function renderPhotoGrid(items) {
+  els.view.innerHTML = `<div class="photo-grid">${items.map((item) => `
+    <article class="photo-card">
+      ${imageMarkup(item, "photo")}
+      <div class="photo-info">
+        <div class="photo-top">
+          <span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span>
+          <span class="car-number">#${escapeHtml(item.number)}</span>
+        </div>
+        <h3>${escapeHtml(item.model)}</h3>
+        <p>${escapeHtml(item.packageText || item.packageType)} · 数量 ${Number(item.quantity || 0)}</p>
+        <small>${escapeHtml(item.note || "")}</small>
+        ${rowActions(item)}
+      </div>
+    </article>
+  `).join("")}</div>`;
+  bindActionButtons();
+}
+
+function imageMarkup(item, mode) {
+  const src = carImage(item);
+  const fallback = !item.imageUrl ? " image-fallback" : "";
+  return `
+    <div class="car-image car-image-${mode}${fallback}">
+      <img src="${escapeHtml(src)}" alt="${escapeHtml(item.model)}" loading="lazy" />
+    </div>
+  `;
+}
+
+function carImage(item) {
+  return item.imageUrl || generatedCarImage(item);
+}
+
+function generatedCarImage(item) {
+  const hue = hashString(`${item.number}${item.model}`) % 360;
+  const hue2 = (hue + 42) % 360;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 390">
+      <defs>
+        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="hsl(${hue},55%,25%)"/>
+          <stop offset="1" stop-color="hsl(${hue2},48%,13%)"/>
+        </linearGradient>
+        <linearGradient id="car" x1="0" x2="1">
+          <stop offset="0" stop-color="hsl(${hue},78%,65%)"/>
+          <stop offset="1" stop-color="hsl(${hue2},82%,48%)"/>
+        </linearGradient>
+      </defs>
+      <rect width="640" height="390" fill="url(#bg)"/>
+      <g opacity=".32" stroke="#fff" stroke-width="3">
+        <path d="M0 286h640M78 235h484M130 180h380"/>
+        <path d="M120 390 268 150M510 390 365 150"/>
+      </g>
+      <g transform="translate(70 120)">
+        <path d="M110 152c28-70 68-96 136-96h96c54 0 92 30 132 94l41 20c20 9 31 28 28 51H44c-3-36 12-58 45-66z" fill="url(#car)"/>
+        <path d="M178 77h181c24 0 46 13 67 40l23 34H112l28-53c8-15 20-21 38-21z" fill="#dce7ee" opacity=".9"/>
+        <path d="M211 85h80v58H171zM314 85h41c20 0 38 12 54 38l11 20h-106z" fill="#1f2933" opacity=".58"/>
+        <circle cx="151" cy="225" r="47" fill="#101820"/>
+        <circle cx="151" cy="225" r="22" fill="#cfd6dd"/>
+        <circle cx="439" cy="225" r="47" fill="#101820"/>
+        <circle cx="439" cy="225" r="22" fill="#cfd6dd"/>
+        <path d="M62 186h478" stroke="#ffffff" stroke-width="8" opacity=".46"/>
+      </g>
+      <text x="34" y="48" fill="#fff" font-family="Arial, sans-serif" font-size="24" font-weight="700">MINI GT #${escapeXml(item.number || "----")}</text>
+      <text x="34" y="352" fill="#fff" font-family="Arial, sans-serif" font-size="18" opacity=".82">添加照片 URL 后这里会显示真实小车图片</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function hashString(value) {
+  return String(value).split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+}
+
+function rowActions(item) {
+  const hasMultiple = item.records && item.records.length > 1;
+  return `
+    <div class="row-actions">
+      <button type="button" title="编辑" data-action="${hasMultiple ? "manage" : "edit"}" data-id="${item.id}">${hasMultiple ? "管理" : "编辑"}</button>
+      <button type="button" title="删除" data-action="${hasMultiple ? "delete-group" : "delete"}" data-id="${item.id}">删除</button>
+    </div>
+  `;
+}
+
+function bindActionButtons() {
+  els.view.querySelectorAll("button[data-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = Number(button.dataset.id);
+      if (button.dataset.action === "edit") editCar(id);
+      if (button.dataset.action === "manage") manageGroup(id);
+      if (button.dataset.action === "delete") deleteCar(id);
+      if (button.dataset.action === "delete-group") deleteGroup(id);
+    });
+  });
+}
+
+function statusClass(status) {
+  const cls = ["status-chip"];
+  if (status.includes("预购")) cls.push("preorder");
+  if (status.includes("入库")) cls.push("local");
+  return cls.join(" ");
+}
+
+function showPreview(event) {
+  const target = event.target.closest(".preview-target");
+  if (!target) return;
+
+  els.preview.innerHTML = `
+    <img src="${target.dataset.preview}" alt="" />
+    <strong>${escapeHtml(target.dataset.title)}</strong>
+    <span>${escapeHtml(target.dataset.subtitle)}</span>
+  `;
+  els.preview.classList.add("visible");
+}
+
+function movePreview(event) {
+  if (!els.preview.classList.contains("visible")) return;
+  const x = Math.min(event.clientX + 18, window.innerWidth - 330);
+  const y = Math.min(event.clientY + 18, window.innerHeight - 310);
+  els.preview.style.transform = `translate(${Math.max(12, x)}px, ${Math.max(12, y)}px)`;
+}
+
+function hidePreview(event) {
+  if (!event.target.closest(".preview-target")) return;
+  els.preview.classList.remove("visible");
+}
+
+function exportCsv() {
+  const header = ["状态", "编号", "车型", "包装", "数量", "购买价", "小车照片URL", "产品页URL", "额外备注"];
+  const rows = inventory.map((item) => [item.status, item.number, item.model, item.packageType || "盒装", item.quantity, item.price || "", item.imageUrl || "", item.productUrl || "", item.note || ""]);
+  const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `minigt-collection-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importCsv(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const rows = parseCsv(String(reader.result || ""));
+    const [, ...body] = rows;
+    inventory = body
+      .filter((row) => row.some((cell) => cell.trim()))
+      .map((row, index) => normalizeItem({
+        id: Date.now() + index,
+        status: row[0] || "",
+        number: row[1] || "",
+        model: row[2] || "",
+        packageType: row[3] || "盒装",
+        quantity: row[4] || 1,
+        price: row[5] ? Number(row[5]) : "",
+        imageUrl: row[6] || "",
+        productUrl: row[7] || "",
+        note: row[8] || ""
+      }));
+    persist();
+    resetForm();
+    render();
+    els.importFile.value = "";
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      i += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(cell);
+      cell = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") i += 1;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+
+  if (cell || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeXml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
