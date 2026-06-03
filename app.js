@@ -153,6 +153,7 @@ const els = {
   editPreview: document.querySelector("#editPreview"),
   editImageUrl: document.querySelector("#editImageUrl"),
   editImagePicker: document.querySelector("#editImagePicker"),
+  editPackageManager: document.querySelector("#editPackageManager"),
   editQuantity: document.querySelector("#editQuantity"),
   editNote: document.querySelector("#editNote"),
   addModal: document.querySelector("#addModal")
@@ -238,7 +239,7 @@ function normalizeItem(item) {
   };
   if (catalogItem) {
     normalized.model = catalogItem.title;
-    if (catalogItem.imageUrl && (!normalized.imageUrl || catalogItem.imageUrl.includes("picfile_list"))) {
+    if (catalogItem.imageUrl && !normalized.imageUrl) {
       normalized.imageUrl = catalogItem.imageUrl;
     }
     normalized.productUrl = normalized.productUrl || catalogItem.productUrl || "";
@@ -246,7 +247,7 @@ function normalizeItem(item) {
   if (knownProductUrls[normalized.number] && (!normalized.productUrl || !normalized.productUrl.includes("minigt.tsm-models.com"))) {
     normalized.productUrl = knownProductUrls[normalized.number];
   }
-  if (knownImageUrls[normalized.number] && (!normalized.imageUrl || knownImageUrls[normalized.number].includes("picfile_list"))) {
+  if (knownImageUrls[normalized.number] && !normalized.imageUrl) {
     normalized.imageUrl = knownImageUrls[normalized.number];
   }
   if (knownOfficialDetails[normalized.number]) {
@@ -608,25 +609,31 @@ function closeAddModal() {
 function editCar(id) {
   const item = inventory.find((entry) => entry.id === id);
   if (!item) return;
+  const records = inventory.filter((entry) => entry.number === item.number);
+  const status = records.some((entry) => entry.status.includes("预购")) ? "预购" : "入库";
+  const totalQuantity = records.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0);
 
   els.editId.value = item.id;
   els.editNumber.textContent = `#${item.number}`;
   els.editTitle.textContent = item.model;
   els.editQuantity.value = item.quantity || 1;
   els.editNote.value = item.note || "";
+  setEditStatus(status);
   setEditPackageType(item.packageType || "盒装");
   els.editPreview.innerHTML = `
     <img src="${escapeHtml(carImage(item))}" alt="${escapeHtml(item.model)}" />
     <div>
-      <strong>${escapeHtml(item.status)}</strong>
-      <span>${escapeHtml(item.packageType || "盒装")} · 数量 ${Number(item.quantity || 0)}</span>
+      <strong>${escapeHtml(status)}</strong>
+      <span>${escapeHtml(packageSummaryText(records))} · 数量 ${totalQuantity}</span>
     </div>
   `;
   els.editImageUrl.value = carImage(item);
   renderImagePicker(item);
+  renderPackageManager(records);
+  setLegacyEditFieldsVisible(false);
   els.editModal.classList.add("visible");
   els.editModal.setAttribute("aria-hidden", "false");
-  els.editQuantity.focus();
+  els.editPackageManager.querySelector("input")?.focus();
 }
 
 function deleteCar(id) {
@@ -636,11 +643,7 @@ function deleteCar(id) {
 }
 
 function manageGroup(id) {
-  const item = inventory.find((entry) => entry.id === id);
-  if (!item) return;
-  const sameNumber = inventory.filter((entry) => entry.number === item.number);
-  const firstEditable = sameNumber[0];
-  editCar(firstEditable.id);
+  editCar(id);
 }
 
 function deleteGroup(id) {
@@ -658,23 +661,33 @@ function saveEdit(event) {
   if (!item) return;
 
   const originalNumber = item.number;
-  const originalPackage = item.packageType || "盒装";
-  const nextPackage = getEditPackageType();
-
-  item.quantity = Math.max(1, Number(els.editQuantity.value || 1));
-  item.packageType = nextPackage;
-  item.note = els.editNote.value.trim();
+  const selectedStatus = getEditStatus();
   const selectedImage = els.editImageUrl.value.trim();
-  if (selectedImage) {
-    inventory.forEach((entry) => {
-      if (entry.number === item.number) entry.imageUrl = selectedImage;
-    });
-  }
-  inventory = inventory.filter((entry) => {
-    if (entry.id === item.id || entry.number !== originalNumber) return true;
-    const packageType = entry.packageType || "盒装";
-    return packageType !== nextPackage && packageType !== originalPackage;
+  const packageRows = readPackageManagerRows();
+  const baseItem = normalizeItem({
+    ...item,
+    status: selectedStatus,
+    imageUrl: selectedImage || item.imageUrl
   });
+  const rebuilt = packageRows.map((row, index) => normalizeItem({
+    ...baseItem,
+    id: row.id || Date.now() + index,
+    status: selectedStatus,
+    packageType: row.packageType,
+    quantity: row.quantity,
+    note: row.note,
+    imageUrl: selectedImage || item.imageUrl
+  }));
+
+  if (!rebuilt.length) {
+    alert("至少保留一种包装，或者使用删除按钮移除整台车型。");
+    return;
+  }
+
+  inventory = [
+    ...rebuilt,
+    ...inventory.filter((entry) => entry.number !== originalNumber)
+  ];
   persist();
   closeEditModal();
   render();
@@ -682,7 +695,7 @@ function saveEdit(event) {
 
 function deleteFromEdit() {
   const id = Number(els.editId.value);
-  deleteCar(id);
+  deleteGroup(id);
   closeEditModal();
 }
 
@@ -715,8 +728,105 @@ function renderImagePicker(item) {
       els.editPreview.querySelector("img").src = button.dataset.imageUrl;
       els.editImagePicker.querySelectorAll("button").forEach((itemButton) => itemButton.classList.remove("selected"));
       button.classList.add("selected");
+      lockImageForNumber(item.number, button.dataset.imageUrl);
     });
   });
+}
+
+function lockImageForNumber(number, imageUrl) {
+  if (!number || !imageUrl) return;
+  inventory.forEach((entry) => {
+    if (entry.number === number) entry.imageUrl = imageUrl;
+  });
+  persist();
+}
+
+function renderPackageManager(records) {
+  const normalized = ["盒装", "挂卡"].map((packageType) => {
+    const matches = records.filter((entry) => (entry.packageType || "盒装") === packageType);
+    if (!matches.length) return null;
+    return {
+      id: matches[0].id,
+      packageType,
+      quantity: matches.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0),
+      note: [...new Set(matches.map((entry) => entry.note).filter(Boolean))].join("；")
+    };
+  }).filter(Boolean);
+
+  els.editPackageManager.innerHTML = `
+    <div class="package-manager-head">
+      <strong>包装明细</strong>
+      <div>
+        ${packageAddButton("盒装", normalized)}
+        ${packageAddButton("挂卡", normalized)}
+      </div>
+    </div>
+    <div class="package-rows">
+      ${normalized.map(packageRowMarkup).join("")}
+    </div>
+  `;
+
+  els.editPackageManager.querySelectorAll("button[data-add-package]").forEach((button) => {
+    button.addEventListener("click", () => addPackageRow(button.dataset.addPackage));
+  });
+  els.editPackageManager.querySelectorAll("button[data-remove-package]").forEach((button) => {
+    button.addEventListener("click", () => button.closest(".package-row").remove());
+  });
+}
+
+function packageAddButton(packageType, rows) {
+  return `<button class="secondary mini" type="button" data-add-package="${packageType}">+ ${packageType}</button>`;
+}
+
+function packageRowMarkup(row) {
+  return `
+    <section class="package-row" data-package-type="${escapeHtml(row.packageType)}" data-record-id="${Number(row.id || 0)}">
+      <div class="package-row-title">
+        <strong>${escapeHtml(row.packageType)}</strong>
+        <button class="danger mini" type="button" data-remove-package="${escapeHtml(row.packageType)}">删除${escapeHtml(row.packageType)}</button>
+      </div>
+      <label>
+        数量
+        <input class="package-quantity" type="number" min="1" step="1" value="${Number(row.quantity || 1)}" required />
+      </label>
+      <label>
+        备注
+        <textarea class="package-note" rows="2" placeholder="例如：加拿大、缺盒、已开封">${escapeHtml(row.note || "")}</textarea>
+      </label>
+    </section>
+  `;
+}
+
+function addPackageRow(packageType) {
+  const rows = els.editPackageManager.querySelector(".package-rows");
+  if (!rows || rows.querySelector(`[data-package-type="${packageType}"]`)) return;
+  rows.insertAdjacentHTML("beforeend", packageRowMarkup({ packageType, quantity: 1, note: "" }));
+  rows.querySelector(`[data-package-type="${packageType}"] input`)?.focus();
+}
+
+function readPackageManagerRows() {
+  return [...els.editPackageManager.querySelectorAll(".package-row")].map((row) => ({
+    id: Number(row.dataset.recordId) || 0,
+    packageType: row.dataset.packageType || "盒装",
+    quantity: Math.max(1, Number(row.querySelector(".package-quantity").value || 1)),
+    note: row.querySelector(".package-note").value.trim()
+  }));
+}
+
+function packageSummaryText(records) {
+  const summary = new Map();
+  records.forEach((entry) => {
+    const packageType = entry.packageType || "盒装";
+    summary.set(packageType, (summary.get(packageType) || 0) + Number(entry.quantity || 0));
+  });
+  return [...summary.entries()].map(([type, count]) => `${type} ${count}`).join(" / ");
+}
+
+function setLegacyEditFieldsVisible(visible) {
+  const display = visible ? "" : "none";
+  document.querySelector("input[name='editPackageType']")?.closest("fieldset")?.style.setProperty("display", display);
+  els.editQuantity?.closest("label")?.style.setProperty("display", display);
+  els.editNote?.closest("label")?.style.setProperty("display", display);
 }
 
 function imageCandidates(item) {
@@ -732,6 +842,16 @@ function getQuickStatus() {
 function setQuickStatus(status) {
   const value = status.includes("预购") ? "预购" : "入库";
   const input = document.querySelector(`input[name='quickStatus'][value='${value}']`);
+  if (input) input.checked = true;
+}
+
+function getEditStatus() {
+  return document.querySelector("input[name='editStatus']:checked")?.value || "入库";
+}
+
+function setEditStatus(status) {
+  const value = status.includes("预购") ? "预购" : "入库";
+  const input = document.querySelector(`input[name='editStatus'][value='${value}']`);
   if (input) input.checked = true;
 }
 

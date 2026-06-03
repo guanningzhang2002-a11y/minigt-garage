@@ -790,6 +790,56 @@ tbody tr:hover {
   object-fit: cover;
 }
 
+.package-manager {
+  display: grid;
+  gap: 10px;
+}
+
+.package-manager:empty {
+  display: none;
+}
+
+.package-manager-head,
+.package-row-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.package-manager-head strong,
+.package-row-title strong {
+  color: var(--ink);
+}
+
+.package-manager-head > div {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.package-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.package-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f9fb;
+}
+
+.mini {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
 .edit-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

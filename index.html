@@ -144,6 +144,18 @@
           <input type="hidden" id="editId" />
           <input type="hidden" id="editImageUrl" />
           <div class="image-picker" id="editImagePicker"></div>
+          <fieldset class="status-field" id="editStatusField">
+            <legend>状态</legend>
+            <label>
+              <input type="radio" name="editStatus" value="入库" checked />
+              <span>入库</span>
+            </label>
+            <label>
+              <input type="radio" name="editStatus" value="预购" />
+              <span>预购</span>
+            </label>
+          </fieldset>
+          <div class="package-manager" id="editPackageManager"></div>
           <fieldset class="status-field">
             <legend>包装</legend>
             <label>
@@ -174,6 +186,6 @@
     <div class="hover-preview" id="hoverPreview" aria-hidden="true"></div>
     <script src="assets/minigt-catalog.js"></script>
     <script src="assets/minigt-image-candidates.js"></script>
-    <script src="app.js?v=20260603-sync3"></script>
+    <script src="app.js?v=20260603-edit1"></script>
   </body>
 </html>
