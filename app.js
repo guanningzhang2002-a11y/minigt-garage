@@ -120,6 +120,7 @@ let syncConfig = loadSyncConfig();
 let syncTimer = null;
 let syncBusy = false;
 let pendingCloudPush = false;
+let lastLocalChangeAt = 0;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -184,6 +185,11 @@ els.addModal.addEventListener("click", (event) => {
 document.addEventListener("mousemove", movePreview);
 document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
+window.addEventListener("focus", refreshFromCloud);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshFromCloud();
+});
+window.setInterval(refreshFromCloud, 30000);
 
 saveLocalOnly();
 renderQuickMatch();
@@ -296,6 +302,7 @@ function inferPackageType(note) {
 }
 
 function persist() {
+  lastLocalChangeAt = Date.now();
   saveLocalOnly();
   scheduleCloudPush();
 }
@@ -308,12 +315,15 @@ function injectSyncUi() {
   const actions = document.querySelector(".hero-actions");
   if (actions && !document.querySelector("#syncBtn")) {
     const button = document.createElement("button");
-    button.className = "secondary";
+    button.className = "settings-fab";
     button.id = "syncBtn";
     button.type = "button";
-    button.textContent = "云同步";
+    button.title = "设置";
+    button.setAttribute("aria-label", "设置");
+    button.textContent = "⚙";
     const exportButton = document.querySelector("#exportBtn");
-    actions.insertBefore(button, exportButton || null);
+    document.querySelector(".hero")?.append(button);
+    if (exportButton) exportButton.style.display = "none";
   }
 
   const heroContent = document.querySelector(".hero-content");
@@ -331,15 +341,20 @@ function injectSyncUi() {
         <div class="edit-dialog sync-dialog" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
           <div class="edit-head">
             <div>
-              <p>PHONE SYNC</p>
-              <h2 id="syncTitle">手机同步设置</h2>
+              <p>SETTINGS</p>
+              <h2 id="syncTitle">设置</h2>
             </div>
             <button class="icon-btn" id="closeSyncBtn" type="button" title="关闭">×</button>
           </div>
-          <div class="sync-copy">
-            <p>把 Supabase 项目的 URL 和 anon key 填到这里。手机和电脑打开同一个网站，并填写同一个同步密码，就会使用同一份收藏数据。</p>
+          <div class="sync-copy sync-connected" id="syncConnected">
+            <strong>云同步已连接</strong>
+            <p>以后新增、编辑、删除会自动上传。另一台设备刷新或回到页面时会自动读取云端。</p>
+            <button class="secondary mini" id="editSyncSettingsBtn" type="button">修改连接</button>
           </div>
-          <form id="syncForm">
+          <form id="syncForm" class="sync-form">
+            <div class="sync-copy">
+              <p>把 Supabase 项目的 URL 和 anon key 填到这里。手机和电脑打开同一个网站，并填写同一个同步密码，就会使用同一份收藏数据。</p>
+            </div>
             <label>
               Supabase Project URL
               <input id="syncUrl" type="url" placeholder="https://xxxx.supabase.co" />
@@ -355,6 +370,7 @@ function injectSyncUi() {
             <button class="primary wide" type="submit">保存并上传当前数据</button>
           </form>
           <div class="sync-actions">
+            <button class="secondary" id="settingsExportBtn" type="button">导出 CSV</button>
             <button class="secondary" id="pullSyncBtn" type="button">从云端下载</button>
             <button class="secondary" id="pushSyncBtn" type="button">上传到云端</button>
             <button class="danger" id="clearSyncBtn" type="button">关闭同步</button>
@@ -371,6 +387,11 @@ function injectSyncUi() {
     if (event.target === document.querySelector("#syncModal")) closeSyncModal();
   });
   document.querySelector("#syncForm")?.addEventListener("submit", saveSyncSettings);
+  document.querySelector("#editSyncSettingsBtn")?.addEventListener("click", () => {
+    document.querySelector("#syncModal")?.classList.remove("configured");
+    document.querySelector("#syncUrl")?.focus();
+  });
+  document.querySelector("#settingsExportBtn")?.addEventListener("click", exportCsv);
   document.querySelector("#pullSyncBtn")?.addEventListener("click", () => {
     if (saveSyncConfigFromForm()) pullFromCloud({ silent: false });
   });
@@ -385,9 +406,9 @@ function openSyncModal() {
   document.querySelector("#syncKey").value = syncConfig.key || "";
   document.querySelector("#syncOwner").value = syncConfig.owner || "";
   const modal = document.querySelector("#syncModal");
+  updateSyncModalState();
   modal.classList.add("visible");
   modal.setAttribute("aria-hidden", "false");
-  document.querySelector("#syncUrl").focus();
 }
 
 function closeSyncModal() {
@@ -416,6 +437,7 @@ function saveSyncConfigFromForm() {
 
   localStorage.setItem(syncStorageKey, JSON.stringify(syncConfig));
   updateSyncStatus();
+  updateSyncModalState();
   return true;
 }
 
@@ -423,7 +445,14 @@ function clearSyncSettings() {
   localStorage.removeItem(syncStorageKey);
   syncConfig = { url: "", key: "", owner: "" };
   updateSyncStatus();
+  updateSyncModalState();
   closeSyncModal();
+}
+
+function updateSyncModalState() {
+  const modal = document.querySelector("#syncModal");
+  if (!modal) return;
+  modal.classList.toggle("configured", isSyncReady());
 }
 
 function isSyncReady() {
@@ -464,6 +493,12 @@ function scheduleCloudPush() {
   }
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 700);
+}
+
+function refreshFromCloud() {
+  if (!isSyncReady() || syncBusy) return;
+  if (Date.now() - lastLocalChangeAt < 2000) return;
+  pullFromCloud({ silent: true });
 }
 
 async function pushToCloud({ silent } = { silent: true }) {
@@ -633,7 +668,6 @@ function editCar(id) {
   setLegacyEditFieldsVisible(false);
   els.editModal.classList.add("visible");
   els.editModal.setAttribute("aria-hidden", "false");
-  els.editPackageManager.querySelector("input")?.focus();
 }
 
 function deleteCar(id) {

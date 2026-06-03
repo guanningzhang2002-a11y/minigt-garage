@@ -107,6 +107,24 @@ h2 {
   flex-wrap: wrap;
 }
 
+.settings-fab {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 4;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(24, 32, 42, 0.16);
+}
+
 .sync-status {
   display: inline-flex;
   align-items: center;
@@ -686,9 +704,28 @@ tbody tr:hover {
   line-height: 1.55;
 }
 
+.sync-connected {
+  display: none;
+}
+
+.sync-connected strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.sync-dialog.configured .sync-connected {
+  display: grid;
+  gap: 8px;
+}
+
+.sync-dialog.configured .sync-form,
+.sync-dialog.configured .sync-help {
+  display: none;
+}
+
 .sync-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 12px;
 }
@@ -1242,6 +1279,17 @@ tbody tr:hover {
   .edit-actions .danger {
     min-height: 46px;
     padding: 0 10px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .settings-fab {
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
   }
 
 }
