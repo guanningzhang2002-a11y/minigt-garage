@@ -119,6 +119,7 @@ let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
 let syncTimer = null;
 let syncBusy = false;
+let pendingCloudPush = false;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -183,7 +184,7 @@ document.addEventListener("mousemove", movePreview);
 document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
 
-persist();
+saveLocalOnly();
 renderQuickMatch();
 render();
 updateSyncStatus();
@@ -294,8 +295,12 @@ function inferPackageType(note) {
 }
 
 function persist() {
-  localStorage.setItem(storageKey, JSON.stringify(inventory));
+  saveLocalOnly();
   scheduleCloudPush();
+}
+
+function saveLocalOnly() {
+  localStorage.setItem(storageKey, JSON.stringify(inventory));
 }
 
 function injectSyncUi() {
@@ -452,12 +457,20 @@ function scheduleCloudPush() {
     updateSyncStatus();
     return;
   }
+  if (syncBusy) {
+    pendingCloudPush = true;
+    return;
+  }
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 700);
 }
 
 async function pushToCloud({ silent } = { silent: true }) {
-  if (!isSyncReady() || syncBusy) return;
+  if (!isSyncReady()) return;
+  if (syncBusy) {
+    pendingCloudPush = true;
+    return;
+  }
   const pushButton = document.querySelector("#pushSyncBtn");
   const originalText = pushButton?.textContent;
   if (pushButton) {
@@ -476,7 +489,7 @@ async function pushToCloud({ silent } = { silent: true }) {
       })
     });
     if (!response.ok) throw new Error(await response.text());
-    setSyncMessage(`已同步 ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    setSyncMessage(`已上传 ${inventory.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
   } catch (error) {
     setSyncMessage("同步失败，请检查 Supabase 设置");
@@ -486,6 +499,10 @@ async function pushToCloud({ silent } = { silent: true }) {
     if (pushButton) {
       pushButton.disabled = false;
       pushButton.textContent = originalText;
+    }
+    if (pendingCloudPush) {
+      pendingCloudPush = false;
+      scheduleCloudPush();
     }
   }
 }
@@ -512,9 +529,9 @@ async function pullFromCloud({ silent } = { silent: true }) {
       return;
     }
     inventory = Array.isArray(rows[0].data) ? rows[0].data.map(normalizeItem) : inventory;
-    localStorage.setItem(storageKey, JSON.stringify(inventory));
+    saveLocalOnly();
     render();
-    setSyncMessage(`已读取云端 ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    setSyncMessage(`已下载 ${inventory.length} 条 · ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
   } catch (error) {
     setSyncMessage("读取失败，请检查 Supabase 设置");
