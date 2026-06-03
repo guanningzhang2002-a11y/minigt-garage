@@ -121,7 +121,6 @@ let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
 let syncTimer = null;
 let syncBusy = false;
-let pendingCloudPush = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 
@@ -188,20 +187,10 @@ els.addModal.addEventListener("click", (event) => {
 document.addEventListener("mousemove", movePreview);
 document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
-window.addEventListener("focus", refreshFromCloud);
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) refreshFromCloud();
-});
-window.setInterval(refreshFromCloud, 3000);
-
 saveLocalOnly();
 renderQuickMatch();
 render();
 updateSyncStatus();
-if (isSyncReady()) {
-  if (hasUnsyncedLocalChanges) pushToCloud({ silent: true });
-  else pullFromCloud({ silent: true });
-}
 registerServiceWorker();
 
 function loadInventory() {
@@ -309,7 +298,7 @@ function persist() {
   lastLocalChangeAt = Date.now();
   markLocalDirty();
   saveLocalOnly();
-  scheduleCloudPush();
+  updateSyncStatus();
 }
 
 function saveLocalOnly() {
@@ -329,6 +318,16 @@ function clearLocalDirty() {
 
 function injectSyncUi() {
   const actions = document.querySelector(".hero-actions");
+  if (actions && !document.querySelector("#quickPushBtn")) {
+    const quickPush = document.createElement("button");
+    quickPush.className = "secondary";
+    quickPush.id = "quickPushBtn";
+    quickPush.type = "button";
+    quickPush.textContent = "上传到云端";
+    const exportButton = document.querySelector("#exportBtn");
+    actions.insertBefore(quickPush, exportButton || null);
+  }
+
   if (actions && !document.querySelector("#syncBtn")) {
     const button = document.createElement("button");
     button.className = "settings-fab";
@@ -397,6 +396,7 @@ function injectSyncUi() {
     `);
   }
 
+  document.querySelector("#quickPushBtn")?.addEventListener("click", () => pushToCloud({ silent: false }));
   document.querySelector("#syncBtn")?.addEventListener("click", openSyncModal);
   document.querySelector("#closeSyncBtn")?.addEventListener("click", closeSyncModal);
   document.querySelector("#syncModal")?.addEventListener("click", (event) => {
@@ -501,26 +501,11 @@ function ownerKey() {
 }
 
 function scheduleCloudPush() {
-  if (!isSyncReady()) {
-    updateSyncStatus();
-    return;
-  }
-  if (syncBusy) {
-    pendingCloudPush = true;
-    return;
-  }
-  window.clearTimeout(syncTimer);
-  syncTimer = window.setTimeout(() => pushToCloud({ silent: true }), 120);
+  updateSyncStatus();
 }
 
 function refreshFromCloud() {
-  if (!isSyncReady() || syncBusy) return;
-  if (hasUnsyncedLocalChanges || pendingCloudPush) {
-    scheduleCloudPush();
-    return;
-  }
-  if (Date.now() - lastLocalChangeAt < 10000) return;
-  pullFromCloud({ silent: true });
+  return;
 }
 
 function inventoryHash(items) {
@@ -542,9 +527,12 @@ function inventoryHash(items) {
 }
 
 async function pushToCloud({ silent } = { silent: true }) {
-  if (!isSyncReady()) return;
+  if (!isSyncReady()) {
+    openSyncModal();
+    setSyncMessage("请先完成云同步设置");
+    return;
+  }
   if (syncBusy) {
-    pendingCloudPush = true;
     return;
   }
   const pushButton = document.querySelector("#pushSyncBtn");
@@ -578,19 +566,15 @@ async function pushToCloud({ silent } = { silent: true }) {
       pushButton.disabled = false;
       pushButton.textContent = originalText;
     }
-    if (pendingCloudPush) {
-      pendingCloudPush = false;
-      scheduleCloudPush();
-    }
   }
 }
 
 async function pullFromCloud({ silent } = { silent: true }) {
   if (!isSyncReady() || syncBusy) return;
   if (hasUnsyncedLocalChanges) {
-    setSyncMessage("本地改动待上传，已跳过云端覆盖");
-    if (!silent) alert("当前有本地改动还没有上传成功，请先点“上传到云端”，再从云端下载。");
-    return;
+    if (silent) return;
+    const confirmed = confirm("当前本地有未上传改动。从云端下载会用云端数据覆盖本地，确定继续吗？");
+    if (!confirmed) return;
   }
   const pullButton = document.querySelector("#pullSyncBtn");
   const originalText = pullButton?.textContent;
@@ -609,10 +593,6 @@ async function pullFromCloud({ silent } = { silent: true }) {
     });
     if (!response.ok) throw new Error(await response.text());
     const rows = await response.json();
-    if (hasUnsyncedLocalChanges) {
-      setSyncMessage("本地改动待上传，已跳过云端覆盖");
-      return;
-    }
     if (!rows.length) {
       syncBusy = false;
       await pushToCloud({ silent: true });
@@ -625,6 +605,7 @@ async function pullFromCloud({ silent } = { silent: true }) {
     }
     inventory = cloudData.map(normalizeItem);
     saveLocalOnly();
+    clearLocalDirty();
     render();
     setSyncMessage(`已下载 ${inventory.length} 条 · ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
@@ -642,7 +623,11 @@ async function pullFromCloud({ silent } = { silent: true }) {
 }
 
 function updateSyncStatus() {
-  setSyncMessage(isSyncReady() ? "云同步已开启" : "本机数据");
+  if (!isSyncReady()) {
+    setSyncMessage("本机数据");
+    return;
+  }
+  setSyncMessage(hasUnsyncedLocalChanges ? "本地有改动，记得上传" : "云同步已连接");
 }
 
 function setSyncMessage(message) {
