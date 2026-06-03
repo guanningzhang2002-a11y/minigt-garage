@@ -114,7 +114,6 @@ const seedInventory = [
 
 const storageKey = "minigt-inventory-v1";
 const syncStorageKey = "minigt-sync-v1";
-const cloudUpdatedStorageKey = "minigt-cloud-updated-at-v1";
 const syncTable = "minigt_collections";
 let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
@@ -123,7 +122,6 @@ let syncBusy = false;
 let pendingCloudPush = false;
 let lastLocalChangeAt = 0;
 let hasUnsyncedLocalChanges = false;
-let lastCloudUpdatedAt = Number(localStorage.getItem(cloudUpdatedStorageKey) || 0);
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -192,7 +190,7 @@ window.addEventListener("focus", refreshFromCloud);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) refreshFromCloud();
 });
-window.setInterval(refreshFromCloud, 5000);
+window.setInterval(refreshFromCloud, 3000);
 
 saveLocalOnly();
 renderQuickMatch();
@@ -506,11 +504,22 @@ function refreshFromCloud() {
   pullFromCloud({ silent: true });
 }
 
-function rememberCloudUpdatedAt(updatedAt) {
-  const timestamp = Date.parse(updatedAt || "");
-  if (!timestamp) return;
-  lastCloudUpdatedAt = timestamp;
-  localStorage.setItem(cloudUpdatedStorageKey, String(timestamp));
+function inventoryHash(items) {
+  return JSON.stringify((items || []).map((item) => ({
+    id: Number(item.id) || 0,
+    status: item.status || "",
+    number: String(item.number || ""),
+    model: item.model || "",
+    quantity: Number(item.quantity || 0),
+    packageType: item.packageType || "盒装",
+    note: item.note || "",
+    imageUrl: item.imageUrl || "",
+    productUrl: item.productUrl || ""
+  })).sort((a, b) => {
+    if (a.number !== b.number) return a.number.localeCompare(b.number);
+    if (a.packageType !== b.packageType) return a.packageType.localeCompare(b.packageType);
+    return a.id - b.id;
+  }));
 }
 
 async function pushToCloud({ silent } = { silent: true }) {
@@ -537,8 +546,7 @@ async function pushToCloud({ silent } = { silent: true }) {
       })
     });
     if (!response.ok) throw new Error(await response.text());
-    const rows = await response.json().catch(() => []);
-    if (rows[0]?.updated_at) rememberCloudUpdatedAt(rows[0].updated_at);
+    await response.json().catch(() => []);
     hasUnsyncedLocalChanges = false;
     setSyncMessage(`已上传 ${inventory.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
     if (!silent) closeSyncModal();
@@ -591,13 +599,12 @@ async function pullFromCloud({ silent } = { silent: true }) {
       await pushToCloud({ silent: true });
       return;
     }
-    const cloudUpdatedAt = Date.parse(rows[0].updated_at || "");
-    if (cloudUpdatedAt && cloudUpdatedAt <= lastCloudUpdatedAt) {
+    const cloudData = Array.isArray(rows[0].data) ? rows[0].data : [];
+    if (inventoryHash(cloudData) === inventoryHash(inventory)) {
       if (!silent) setSyncMessage("云端暂无新变化");
       return;
     }
-    inventory = Array.isArray(rows[0].data) ? rows[0].data.map(normalizeItem) : inventory;
-    if (rows[0].updated_at) rememberCloudUpdatedAt(rows[0].updated_at);
+    inventory = cloudData.map(normalizeItem);
     saveLocalOnly();
     render();
     setSyncMessage(`已下载 ${inventory.length} 条 · ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);

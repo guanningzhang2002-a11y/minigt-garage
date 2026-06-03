@@ -1,4 +1,4 @@
-const cacheName = "minigt-tracker-v11";
+const cacheName = "minigt-tracker-v12";
 const appShell = [
   "./",
   "./index.html",
