@@ -578,7 +578,7 @@ textarea:focus {
 }
 
 .status-summary {
-  display: flex;
+  display: none;
   gap: 8px;
   flex-wrap: wrap;
   margin: 8px 0 14px;
