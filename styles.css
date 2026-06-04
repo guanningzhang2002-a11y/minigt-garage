@@ -969,7 +969,7 @@ tbody tr:hover {
 }
 
 .wishlist-card:hover .wishlist-image-link {
-  z-index: 5;
+  z-index: 20;
 }
 
 .wishlist-card img {
@@ -982,9 +982,9 @@ tbody tr:hover {
 }
 
 .wishlist-card img:hover {
-  transform: scale(1.65);
+  transform: scale(2.25);
   transform-origin: left center;
-  box-shadow: 0 18px 42px rgba(24, 32, 42, 0.24);
+  box-shadow: 0 22px 54px rgba(24, 32, 42, 0.3);
 }
 
 .wishlist-card strong {
