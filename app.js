@@ -123,6 +123,7 @@ let syncTimer = null;
 let syncBusy = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
+let activeCategory = { type: "all", value: "all", label: "全部收藏" };
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -140,6 +141,8 @@ const els = {
   viewSelect: document.querySelector("#viewSelect"),
   sort: document.querySelector("#sortSelect"),
   statusSummary: document.querySelector("#statusSummary"),
+  categoryList: document.querySelector("#categoryList"),
+  activeCategoryLabel: document.querySelector("#activeCategoryLabel"),
   quickMatch: document.querySelector("#quickMatch"),
   totalQty: document.querySelector("#totalQty"),
   totalItems: document.querySelector("#totalItems"),
@@ -175,6 +178,7 @@ els.statusFilter.addEventListener("change", render);
 els.viewSelect.addEventListener("change", render);
 els.sort.addEventListener("change", render);
 els.importFile.addEventListener("change", importCsv);
+els.categoryList?.addEventListener("click", selectCategory);
 els.editForm.addEventListener("submit", saveEdit);
 document.querySelector("#closeEditBtn").addEventListener("click", closeEditModal);
 document.querySelector("#deleteEditBtn").addEventListener("click", deleteFromEdit);
@@ -1015,6 +1019,7 @@ function render() {
   const filtered = filteredInventory();
   renderStats();
   renderFilters();
+  renderCategories();
   renderStatusSummary();
   renderInventory(filtered);
 }
@@ -1026,7 +1031,9 @@ function filteredInventory() {
   return inventory
     .filter((item) => {
       const haystack = [item.status, item.number, item.model, item.packageType, item.note].join(" ").toLowerCase();
-      return (!query || haystack.includes(query)) && (status === "all" || item.status === status);
+      return (!query || haystack.includes(query))
+        && (status === "all" || item.status === status)
+        && categoryMatches(item, activeCategory);
     })
     .sort((a, b) => {
       if (els.sort.value === "number-asc") return numberValue(a.number) - numberValue(b.number);
@@ -1061,6 +1068,117 @@ function renderFilters() {
   const current = els.statusFilter.value;
   els.statusFilter.innerHTML = `<option value="all">全部状态</option>${statuses.map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`).join("")}`;
   els.statusFilter.value = statuses.includes(current) ? current : "all";
+}
+
+function renderCategories() {
+  if (!els.categoryList) return;
+  const sections = buildCategorySections(inventory);
+  const activeKey = `${activeCategory.type}:${activeCategory.value}`;
+  els.activeCategoryLabel.textContent = activeCategory.label;
+  els.categoryList.innerHTML = `
+    <button class="category-item ${activeKey === "all:all" ? "active" : ""}" type="button" data-type="all" data-value="all" data-label="全部收藏">
+      <span>全部收藏</span>
+      <strong>${groupInventory(inventory).length}</strong>
+    </button>
+    ${sections.map((section) => `
+      <section class="category-section">
+        <h3>${escapeHtml(section.title)}</h3>
+        ${section.items.map((item) => `
+          <button class="category-item ${activeKey === `${section.type}:${item.value}` ? "active" : ""}" type="button" data-type="${escapeHtml(section.type)}" data-value="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">
+            <span>${escapeHtml(item.label)}</span>
+            <strong>${item.count}</strong>
+          </button>
+        `).join("")}
+      </section>
+    `).join("")}
+  `;
+}
+
+function selectCategory(event) {
+  const button = event.target.closest("button[data-type]");
+  if (!button) return;
+  activeCategory = {
+    type: button.dataset.type,
+    value: button.dataset.value,
+    label: button.dataset.label
+  };
+  render();
+}
+
+function buildCategorySections(items) {
+  return [
+    { title: "车厂品牌", type: "maker", items: categoryCounts(items, makerCategoryDefinitions()) },
+    { title: "改装厂与系列", type: "tuner", items: categoryCounts(items, tunerCategoryDefinitions()) },
+    { title: "赛事与主题", type: "theme", items: categoryCounts(items, themeCategoryDefinitions()) }
+  ].filter((section) => section.items.length);
+}
+
+function categoryCounts(items, definitions) {
+  return definitions.map((definition) => {
+    const matched = groupInventory(items.filter((item) => textMatchesCategory(categoryText(item), definition)));
+    return { ...definition, count: matched.length };
+  }).filter((item) => item.count > 0);
+}
+
+function categoryMatches(item, category) {
+  if (!category || category.type === "all") return true;
+  const definitions = {
+    maker: makerCategoryDefinitions(),
+    tuner: tunerCategoryDefinitions(),
+    theme: themeCategoryDefinitions()
+  }[category.type] || [];
+  const definition = definitions.find((entry) => entry.value === category.value);
+  return definition ? textMatchesCategory(categoryText(item), definition) : true;
+}
+
+function categoryText(item) {
+  return [item.model, item.note, item.productUrl].join(" ").toLowerCase();
+}
+
+function textMatchesCategory(text, definition) {
+  return definition.keywords.some((keyword) => text.includes(keyword.toLowerCase()));
+}
+
+function makerCategoryDefinitions() {
+  return [
+  { value: "porsche", label: "Porsche", keywords: ["Porsche", "911"] },
+  { value: "nissan", label: "Nissan", keywords: ["Nissan", "Silvia", "Skyline", "GT-R", "Z "] },
+  { value: "mazda", label: "Mazda", keywords: ["Mazda", "Miata", "RX-7", "MX-5"] },
+  { value: "toyota", label: "Toyota", keywords: ["Toyota", "Supra"] },
+  { value: "lamborghini", label: "Lamborghini", keywords: ["Lamborghini", "Huracan", "Countach", "Aventador"] },
+  { value: "honda", label: "Honda", keywords: ["Honda", "Acura", "NSX", "Civic", "S2000"] },
+  { value: "bmw", label: "BMW", keywords: ["BMW", "M3", "M4"] },
+  { value: "mercedes", label: "Mercedes-Benz", keywords: ["Mercedes", "AMG"] },
+  { value: "ford", label: "Ford", keywords: ["Ford", "Mustang", "GT40"] },
+  { value: "chevrolet", label: "Chevrolet", keywords: ["Chevrolet", "Corvette", "Camaro"] },
+  { value: "mclaren", label: "McLaren", keywords: ["McLaren"] },
+  { value: "bugatti", label: "Bugatti", keywords: ["Bugatti"] }
+  ];
+}
+
+function tunerCategoryDefinitions() {
+  return [
+  { value: "lbworks", label: "LB-WORKS / LBWK", keywords: ["LB-WORKS", "LBWK", "Liberty Walk", "LB-Super", "LB-Silhouette"] },
+  { value: "kaido", label: "Kaido Works", keywords: ["Kaido Works", "Kaido"] },
+  { value: "veilside", label: "VeilSide", keywords: ["VeilSide"] },
+  { value: "pandem", label: "Pandem", keywords: ["Pandem"] },
+  { value: "bomex", label: "BOMEX", keywords: ["BOMEX"] },
+  { value: "dmax", label: "D-MAX", keywords: ["D-MAX"] },
+  { value: "amoculture", label: "AMOCULTURE", keywords: ["AMOCULTURE"] },
+  { value: "garasi", label: "GARASIDRIFT", keywords: ["GARASIDRIFT"] },
+  { value: "street-customs", label: "Street Customs", keywords: ["Street Customs"] }
+  ];
+}
+
+function themeCategoryDefinitions() {
+  return [
+  { value: "imsa", label: "IMSA", keywords: ["IMSA", "Daytona", "Sebring", "Petit Le Mans", "Road America"] },
+  { value: "formula-drift", label: "Formula Drift", keywords: ["Formula Drift"] },
+  { value: "d1gp", label: "D1 Grand Prix", keywords: ["D1 Grand Prix", "D1GP"] },
+  { value: "fast-furious", label: "Fast & Furious", keywords: ["Fast & Furious", "Tokyo Drift", "Brian O'Conner", "Han Seoul-Oh"] },
+  { value: "ao-racing", label: "AO Racing", keywords: ["AO Racing"] },
+  { value: "limited", label: "Limited Edition", keywords: ["Limited Edition"] }
+  ];
 }
 
 function renderStatusSummary() {
