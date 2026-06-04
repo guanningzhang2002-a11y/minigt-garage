@@ -125,7 +125,9 @@ let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 let activeCategory = { type: "all", value: "all", label: "全部收藏" };
 let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
+let activeWishlistPage = 1;
 let wishlistPreviewTimer = null;
+const wishlistPageSize = 50;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -187,7 +189,7 @@ els.viewSelect.addEventListener("change", render);
 els.sort.addEventListener("change", render);
 els.importFile.addEventListener("change", importCsv);
 els.categoryList?.addEventListener("click", selectCategory);
-els.wishlistSearch?.addEventListener("input", renderWishlistCatalog);
+els.wishlistSearch?.addEventListener("input", handleWishlistSearch);
 els.wishlistFilter?.addEventListener("click", selectWishlistCategory);
 els.wishlistResults?.addEventListener("click", handleWishlistAction);
 els.wishlistResults?.addEventListener("mouseover", startWishlistPreview);
@@ -725,6 +727,7 @@ function openWishlistModal() {
   els.wishlistModal.setAttribute("aria-hidden", "false");
   els.wishlistSearch.value = "";
   activeWishlistCategory = { type: "all", value: "all", label: "全部" };
+  activeWishlistPage = 1;
   renderWishlistCatalog();
   els.wishlistSearch.focus();
 }
@@ -751,11 +754,20 @@ function renderWishlistCatalog() {
         .join(" ");
       const haystack = [item.number, item.title, categoryText].join(" ").toLowerCase();
       return !query || haystack.includes(query);
-    })
-    .slice(0, 120);
+    });
+  const totalPages = Math.max(1, Math.ceil(items.length / wishlistPageSize));
+  activeWishlistPage = Math.min(Math.max(activeWishlistPage, 1), totalPages);
+  const start = (activeWishlistPage - 1) * wishlistPageSize;
+  const visibleItems = items.slice(start, start + wishlistPageSize);
 
-  els.wishlistResults.innerHTML = items.length ? items.map(wishlistCatalogCard).join("") : `
-    <p class="wishlist-empty">没有匹配的 MINI GT 车型。</p>
+  els.wishlistResults.innerHTML = `
+    ${renderWishlistPager(items.length, totalPages)}
+    <div class="wishlist-grid">
+      ${visibleItems.length ? visibleItems.map(wishlistCatalogCard).join("") : `
+        <p class="wishlist-empty">没有匹配的 MINI GT 车型。</p>
+      `}
+    </div>
+    ${totalPages > 1 ? renderWishlistPager(items.length, totalPages) : ""}
   `;
 }
 
@@ -778,9 +790,51 @@ function wishlistCatalogCard(item) {
 }
 
 function handleWishlistAction(event) {
+  const pageButton = event.target.closest("button[data-wishlist-page]");
+  if (pageButton) {
+    activeWishlistPage = Number(pageButton.dataset.wishlistPage) || 1;
+    renderWishlistCatalog();
+    els.wishlistResults.scrollTo?.({ top: 0, behavior: "smooth" });
+    return;
+  }
   const button = event.target.closest("button[data-wishlist-number]");
   if (!button) return;
   addToWishlist(button.dataset.wishlistNumber);
+}
+
+function handleWishlistSearch() {
+  activeWishlistPage = 1;
+  renderWishlistCatalog();
+}
+
+function renderWishlistPager(totalItems, totalPages) {
+  if (!totalItems) return "";
+  const pages = compactPages(activeWishlistPage, totalPages);
+  return `
+    <div class="wishlist-pager" aria-label="愿望清单分页">
+      <span>${totalItems} 台 · 第 ${activeWishlistPage}/${totalPages} 页</span>
+      <div>
+        <button type="button" data-wishlist-page="${Math.max(1, activeWishlistPage - 1)}" ${activeWishlistPage <= 1 ? "disabled" : ""}>上一页</button>
+        ${pages.map((page) => page === "gap"
+          ? `<em>...</em>`
+          : `<button class="${page === activeWishlistPage ? "active" : ""}" type="button" data-wishlist-page="${page}">${page}</button>`
+        ).join("")}
+        <button type="button" data-wishlist-page="${Math.min(totalPages, activeWishlistPage + 1)}" ${activeWishlistPage >= totalPages ? "disabled" : ""}>下一页</button>
+      </div>
+    </div>
+  `;
+}
+
+function compactPages(current, total) {
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1);
+  const pages = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push("gap");
+  for (let page = start; page <= end; page += 1) pages.push(page);
+  if (end < total - 1) pages.push("gap");
+  pages.push(total);
+  return pages;
 }
 
 function renderWishlistFilters(items) {
@@ -813,6 +867,7 @@ function selectWishlistCategory(event) {
     value: button.dataset.value,
     label: button.dataset.label
   };
+  activeWishlistPage = 1;
   renderWishlistCatalog();
 }
 
