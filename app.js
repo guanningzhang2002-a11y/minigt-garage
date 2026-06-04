@@ -1097,6 +1097,13 @@ function renderCategories() {
 function selectCategory(event) {
   const button = event.target.closest("button[data-type]");
   if (!button) return;
+  const selected = `${button.dataset.type}:${button.dataset.value}`;
+  const current = `${activeCategory.type}:${activeCategory.value}`;
+  if (selected === current && selected !== "all:all") {
+    activeCategory = { type: "all", value: "all", label: "全部收藏" };
+    render();
+    return;
+  }
   activeCategory = {
     type: button.dataset.type,
     value: button.dataset.value,
