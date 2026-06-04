@@ -124,6 +124,8 @@ let syncBusy = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 let activeCategory = { type: "all", value: "all", label: "全部收藏" };
+let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
+let wishlistPreviewTimer = null;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -165,6 +167,7 @@ const els = {
   addModal: document.querySelector("#addModal"),
   wishlistModal: document.querySelector("#wishlistModal"),
   wishlistSearch: document.querySelector("#wishlistSearch"),
+  wishlistFilter: document.querySelector("#wishlistFilter"),
   wishlistResults: document.querySelector("#wishlistResults")
 };
 
@@ -185,7 +188,10 @@ els.sort.addEventListener("change", render);
 els.importFile.addEventListener("change", importCsv);
 els.categoryList?.addEventListener("click", selectCategory);
 els.wishlistSearch?.addEventListener("input", renderWishlistCatalog);
+els.wishlistFilter?.addEventListener("click", selectWishlistCategory);
 els.wishlistResults?.addEventListener("click", handleWishlistAction);
+els.wishlistResults?.addEventListener("mouseover", startWishlistPreview);
+els.wishlistResults?.addEventListener("mouseout", stopWishlistPreview);
 els.editForm.addEventListener("submit", saveEdit);
 document.querySelector("#closeEditBtn").addEventListener("click", closeEditModal);
 document.querySelector("#deleteEditBtn").addEventListener("click", deleteFromEdit);
@@ -718,6 +724,7 @@ function openWishlistModal() {
   els.wishlistModal.classList.add("visible");
   els.wishlistModal.setAttribute("aria-hidden", "false");
   els.wishlistSearch.value = "";
+  activeWishlistCategory = { type: "all", value: "all", label: "全部" };
   renderWishlistCatalog();
   els.wishlistSearch.focus();
 }
@@ -729,9 +736,20 @@ function closeWishlistModal() {
 
 function renderWishlistCatalog() {
   const query = els.wishlistSearch.value.trim().toLowerCase();
-  const items = catalogList()
+  const catalog = catalogList();
+  renderWishlistFilters(catalog);
+  const items = catalog
+    .filter((item) => wishlistCategoryMatches(item, activeWishlistCategory))
     .filter((item) => {
-      const haystack = [item.number, item.title].join(" ").toLowerCase();
+      const categoryText = [
+        ...makerCategoryDefinitions(),
+        ...tunerCategoryDefinitions(),
+        ...themeCategoryDefinitions()
+      ]
+        .filter((definition) => categoryMatches(catalogToInventoryLike(item), definition))
+        .map((definition) => definition.label)
+        .join(" ");
+      const haystack = [item.number, item.title, categoryText].join(" ").toLowerCase();
       return !query || haystack.includes(query);
     })
     .slice(0, 120);
@@ -744,13 +762,15 @@ function renderWishlistCatalog() {
 function wishlistCatalogCard(item) {
   const existing = inventory.find((entry) => entry.number === item.number);
   const statusText = existing ? (isWishlistItem(existing) ? "已在愿望清单" : "已在收藏") : "加入愿望清单";
+  const imageUrls = wishlistImageCandidates(item);
+  const productUrl = item.productUrl || knownProductUrls[item.number] || "";
+  const image = `<img src="${escapeHtml(imageUrls[0] || generatedCarImage(item))}" alt="${escapeHtml(item.title)}" loading="lazy" data-preview-images="${escapeHtml(imageUrls.join("|"))}" />`;
   return `
     <article class="wishlist-card">
-      <img src="${escapeHtml(item.imageUrl || generatedCarImage(item))}" alt="${escapeHtml(item.title)}" loading="lazy" />
+      ${productUrl ? `<a class="wishlist-image-link" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer" title="打开产品页">${image}</a>` : image}
       <div>
         <strong>#${escapeHtml(item.number)}</strong>
         <h3>${escapeHtml(item.title)}</h3>
-        ${item.productUrl ? `<a href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">产品页</a>` : ""}
       </div>
       <button class="${existing ? "secondary" : "primary"}" type="button" data-wishlist-number="${escapeHtml(item.number)}" ${existing ? "disabled" : ""}>${statusText}</button>
     </article>
@@ -761,6 +781,78 @@ function handleWishlistAction(event) {
   const button = event.target.closest("button[data-wishlist-number]");
   if (!button) return;
   addToWishlist(button.dataset.wishlistNumber);
+}
+
+function renderWishlistFilters(items) {
+  const sections = [
+    { title: "车厂品牌", type: "maker", items: categoryCounts(items.map(catalogToInventoryLike), makerCategoryDefinitions()).slice(0, 8) },
+    { title: "改装厂与系列", type: "tuner", items: categoryCounts(items.map(catalogToInventoryLike), tunerCategoryDefinitions()).slice(0, 8) },
+    { title: "赛事与主题", type: "theme", items: categoryCounts(items.map(catalogToInventoryLike), themeCategoryDefinitions()).slice(0, 8) }
+  ].filter((section) => section.items.length);
+  const activeKey = `${activeWishlistCategory.type}:${activeWishlistCategory.value}`;
+  els.wishlistFilter.innerHTML = `
+    <button class="wishlist-filter-item ${activeKey === "all:all" ? "active" : ""}" type="button" data-type="all" data-value="all" data-label="全部">全部</button>
+    ${sections.map((section) => `
+      <section>
+        <h3>${escapeHtml(section.title)}</h3>
+        ${section.items.map((item) => `
+          <button class="wishlist-filter-item ${activeKey === `${section.type}:${item.value}` ? "active" : ""}" type="button" data-type="${escapeHtml(section.type)}" data-value="${escapeHtml(item.value)}" data-label="${escapeHtml(item.label)}">
+            <span>${escapeHtml(item.label)}</span><strong>${item.count}</strong>
+          </button>
+        `).join("")}
+      </section>
+    `).join("")}
+  `;
+}
+
+function selectWishlistCategory(event) {
+  const button = event.target.closest("button[data-type]");
+  if (!button) return;
+  activeWishlistCategory = {
+    type: button.dataset.type,
+    value: button.dataset.value,
+    label: button.dataset.label
+  };
+  renderWishlistCatalog();
+}
+
+function wishlistCategoryMatches(item, category) {
+  if (!category || category.type === "all") return true;
+  return categoryMatches(catalogToInventoryLike(item), category);
+}
+
+function catalogToInventoryLike(item) {
+  return { number: item.number, model: item.title, note: "", productUrl: item.productUrl || "" };
+}
+
+function wishlistImageCandidates(item) {
+  const urls = [
+    item.imageUrl,
+    knownImageUrls[item.number],
+    ...(window.MINIGT_IMAGE_CANDIDATES?.[item.number] || [])
+  ].filter(Boolean);
+  return [...new Set(urls)];
+}
+
+function startWishlistPreview(event) {
+  const img = event.target.closest(".wishlist-card img[data-preview-images]");
+  if (!img) return;
+  const images = img.dataset.previewImages.split("|").filter(Boolean);
+  if (images.length < 2) return;
+  let index = 0;
+  window.clearInterval(wishlistPreviewTimer);
+  wishlistPreviewTimer = window.setInterval(() => {
+    index = (index + 1) % images.length;
+    img.src = images[index];
+  }, 950);
+}
+
+function stopWishlistPreview(event) {
+  const img = event.target.closest(".wishlist-card img[data-preview-images]");
+  if (!img) return;
+  window.clearInterval(wishlistPreviewTimer);
+  const first = img.dataset.previewImages.split("|").filter(Boolean)[0];
+  if (first) img.src = first;
 }
 
 function addToWishlist(number) {
@@ -1381,7 +1473,7 @@ function tableRow(item) {
       <td>${imageMarkup(item, "thumb")}</td>
       <td><span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
       <td class="number-cell">#${escapeHtml(item.number)}</td>
-      <td class="model-cell"><strong>${escapeHtml(item.model)}</strong>${item.productUrl ? `<a href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">产品页</a>` : ""}</td>
+      <td class="model-cell"><strong>${escapeHtml(item.model)}</strong></td>
       <td>${escapeHtml(item.packageText || item.packageType)}</td>
       <td>${Number(item.quantity || 0)}</td>
       <td>${escapeHtml(item.note || "")}</td>
@@ -1412,11 +1504,14 @@ function renderPhotoGrid(items) {
 function imageMarkup(item, mode) {
   const src = carImage(item);
   const fallback = !item.imageUrl ? " image-fallback" : "";
-  return `
+  const image = `
     <div class="car-image car-image-${mode}${fallback}">
       <img src="${escapeHtml(src)}" alt="${escapeHtml(item.model)}" loading="lazy" />
     </div>
   `;
+  return item.productUrl
+    ? `<a class="car-image-link" href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer" title="打开产品页">${image}</a>`
+    : image;
 }
 
 function carImage(item) {
