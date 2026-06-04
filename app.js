@@ -1020,7 +1020,6 @@ function render() {
   renderStats();
   renderFilters();
   renderCategories();
-  renderStatusSummary();
   renderInventory(filtered);
 }
 
@@ -1189,6 +1188,7 @@ function themeCategoryDefinitions() {
 }
 
 function renderStatusSummary() {
+  if (!els.statusSummary) return;
   const counts = new Map();
   inventory.forEach((item) => counts.set(item.status, (counts.get(item.status) || 0) + Number(item.quantity || 0)));
   els.statusSummary.innerHTML = [...counts.entries()]
