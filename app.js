@@ -877,7 +877,16 @@ function wishlistCategoryMatches(item, category) {
 }
 
 function catalogToInventoryLike(item) {
-  return { number: item.number, model: item.title, note: "", productUrl: item.productUrl || "" };
+  return {
+    id: item.number,
+    status: "",
+    number: item.number,
+    model: item.title,
+    quantity: 1,
+    packageType: "盒装",
+    note: "",
+    productUrl: item.productUrl || ""
+  };
 }
 
 function wishlistImageCandidates(item) {
@@ -1487,7 +1496,7 @@ function groupInventory(items) {
     group.quantity += Number(item.quantity || 0);
     group.packageSummary.set(item.packageType || "盒装", (group.packageSummary.get(item.packageType || "盒装") || 0) + Number(item.quantity || 0));
     if (item.note && !group.noteSummary.includes(item.note)) group.noteSummary.push(item.note);
-    if (item.status.includes("预购")) group.status = "预购";
+    if (String(item.status || "").includes("预购")) group.status = "预购";
   });
 
   return [...groups.values()].map((group) => ({
