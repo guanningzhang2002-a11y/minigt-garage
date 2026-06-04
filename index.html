@@ -18,6 +18,7 @@
           <h1>我的 MINIGT 车库</h1>
           <div class="hero-actions">
             <button class="primary" id="focusFormBtn" type="button">+ 新增车辆</button>
+            <button class="secondary" id="wishlistBtn" type="button">愿望清单</button>
             <button class="secondary" id="exportBtn" type="button">导出 CSV</button>
           </div>
         </div>
@@ -160,6 +161,10 @@
               <input type="radio" name="editStatus" value="预购" />
               <span>预购</span>
             </label>
+            <label>
+              <input type="radio" name="editStatus" value="愿望清单" />
+              <span>愿望清单</span>
+            </label>
           </fieldset>
           <div class="package-manager" id="editPackageManager"></div>
           <fieldset class="status-field">
@@ -189,10 +194,26 @@
       </div>
     </div>
 
+    <div class="edit-modal" id="wishlistModal" aria-hidden="true">
+      <div class="edit-dialog wishlist-dialog" role="dialog" aria-modal="true" aria-labelledby="wishlistTitle">
+        <div class="edit-head">
+          <div>
+            <p>WISHLIST</p>
+            <h2 id="wishlistTitle">愿望清单</h2>
+          </div>
+          <button class="icon-btn" id="closeWishlistBtn" type="button" title="关闭">×</button>
+        </div>
+        <div class="wishlist-search">
+          <input id="wishlistSearch" type="search" placeholder="搜索编号、车厂、车型、系列" />
+        </div>
+        <div class="wishlist-results" id="wishlistResults"></div>
+      </div>
+    </div>
+
     <div class="hover-preview" id="hoverPreview" aria-hidden="true"></div>
     <button class="back-to-top" id="backToTopBtn" type="button" title="回到顶部" aria-label="回到顶部">↑</button>
     <script src="assets/minigt-catalog.js"></script>
     <script src="assets/minigt-image-candidates.js"></script>
-    <script src="app.js?v=20260604-clean2"></script>
+    <script src="app.js?v=20260604-wishlist2"></script>
   </body>
 </html>

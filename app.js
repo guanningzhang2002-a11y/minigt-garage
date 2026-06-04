@@ -162,13 +162,18 @@ const els = {
   editPackageManager: document.querySelector("#editPackageManager"),
   editQuantity: document.querySelector("#editQuantity"),
   editNote: document.querySelector("#editNote"),
-  addModal: document.querySelector("#addModal")
+  addModal: document.querySelector("#addModal"),
+  wishlistModal: document.querySelector("#wishlistModal"),
+  wishlistSearch: document.querySelector("#wishlistSearch"),
+  wishlistResults: document.querySelector("#wishlistResults")
 };
 
 injectSyncUi();
 
 document.querySelector("#focusFormBtn").addEventListener("click", openAddModal);
+document.querySelector("#wishlistBtn").addEventListener("click", openWishlistModal);
 document.querySelector("#closeAddBtn").addEventListener("click", closeAddModal);
+document.querySelector("#closeWishlistBtn").addEventListener("click", closeWishlistModal);
 document.querySelector("#restoreSeedBtn").addEventListener("click", restoreSeed);
 document.querySelector("#exportBtn").addEventListener("click", exportCsv);
 els.form.addEventListener("submit", saveCar);
@@ -179,6 +184,8 @@ els.viewSelect.addEventListener("change", render);
 els.sort.addEventListener("change", render);
 els.importFile.addEventListener("change", importCsv);
 els.categoryList?.addEventListener("click", selectCategory);
+els.wishlistSearch?.addEventListener("input", renderWishlistCatalog);
+els.wishlistResults?.addEventListener("click", handleWishlistAction);
 els.editForm.addEventListener("submit", saveEdit);
 document.querySelector("#closeEditBtn").addEventListener("click", closeEditModal);
 document.querySelector("#deleteEditBtn").addEventListener("click", deleteFromEdit);
@@ -187,6 +194,9 @@ els.editModal.addEventListener("click", (event) => {
 });
 els.addModal.addEventListener("click", (event) => {
   if (event.target === els.addModal) closeAddModal();
+});
+els.wishlistModal?.addEventListener("click", (event) => {
+  if (event.target === els.wishlistModal) closeWishlistModal();
 });
 document.addEventListener("mousemove", movePreview);
 document.addEventListener("mouseover", showPreview);
@@ -704,11 +714,98 @@ function closeAddModal() {
   els.addModal.setAttribute("aria-hidden", "true");
 }
 
+function openWishlistModal() {
+  els.wishlistModal.classList.add("visible");
+  els.wishlistModal.setAttribute("aria-hidden", "false");
+  els.wishlistSearch.value = "";
+  renderWishlistCatalog();
+  els.wishlistSearch.focus();
+}
+
+function closeWishlistModal() {
+  els.wishlistModal.classList.remove("visible");
+  els.wishlistModal.setAttribute("aria-hidden", "true");
+}
+
+function renderWishlistCatalog() {
+  const query = els.wishlistSearch.value.trim().toLowerCase();
+  const items = catalogList()
+    .filter((item) => {
+      const haystack = [item.number, item.title].join(" ").toLowerCase();
+      return !query || haystack.includes(query);
+    })
+    .slice(0, 120);
+
+  els.wishlistResults.innerHTML = items.length ? items.map(wishlistCatalogCard).join("") : `
+    <p class="wishlist-empty">没有匹配的 MINI GT 车型。</p>
+  `;
+}
+
+function wishlistCatalogCard(item) {
+  const existing = inventory.find((entry) => entry.number === item.number);
+  const statusText = existing ? (isWishlistItem(existing) ? "已在愿望清单" : "已在收藏") : "加入愿望清单";
+  return `
+    <article class="wishlist-card">
+      <img src="${escapeHtml(item.imageUrl || generatedCarImage(item))}" alt="${escapeHtml(item.title)}" loading="lazy" />
+      <div>
+        <strong>#${escapeHtml(item.number)}</strong>
+        <h3>${escapeHtml(item.title)}</h3>
+        ${item.productUrl ? `<a href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">产品页</a>` : ""}
+      </div>
+      <button class="${existing ? "secondary" : "primary"}" type="button" data-wishlist-number="${escapeHtml(item.number)}" ${existing ? "disabled" : ""}>${statusText}</button>
+    </article>
+  `;
+}
+
+function handleWishlistAction(event) {
+  const button = event.target.closest("button[data-wishlist-number]");
+  if (!button) return;
+  addToWishlist(button.dataset.wishlistNumber);
+}
+
+function addToWishlist(number) {
+  if (!number || inventory.some((item) => item.number === number)) return;
+  const catalogItem = getCatalogItem(number);
+  const known = knownOfficialDetails[number];
+  const title = catalogItem?.title || (known ? `${known.model} ${known.variant}`.trim() : `MINI GT #${number}`);
+  inventory.unshift(normalizeItem({
+    id: Date.now(),
+    status: "愿望清单",
+    number,
+    model: title,
+    quantity: 1,
+    packageType: "盒装",
+    note: "",
+    imageUrl: catalogItem?.imageUrl || knownImageUrls[number] || "",
+    productUrl: catalogItem?.productUrl || knownProductUrls[number] || ""
+  }));
+  persist();
+  render();
+  renderWishlistCatalog();
+}
+
+function catalogList() {
+  const fromCatalog = Object.entries(window.MINIGT_CATALOG || {}).map(([number, item]) => ({
+    number,
+    title: item.title || `MINI GT #${number}`,
+    imageUrl: item.imageUrl || knownImageUrls[number] || "",
+    productUrl: item.productUrl || knownProductUrls[number] || ""
+  }));
+  const fromKnown = Object.entries(knownOfficialDetails).map(([number, item]) => ({
+    number,
+    title: `${item.model} ${item.variant}`.trim(),
+    imageUrl: knownImageUrls[number] || "",
+    productUrl: knownProductUrls[number] || ""
+  }));
+  return [...new Map([...fromCatalog, ...fromKnown].map((item) => [item.number, item])).values()]
+    .sort((a, b) => numberValue(b.number) - numberValue(a.number));
+}
+
 function editCar(id) {
   const item = inventory.find((entry) => entry.id === id);
   if (!item) return;
   const records = inventory.filter((entry) => entry.number === item.number);
-  const status = records.some((entry) => entry.status.includes("预购")) ? "预购" : "入库";
+  const status = records.every((entry) => isWishlistItem(entry)) ? "愿望清单" : records.some((entry) => entry.status.includes("预购")) ? "预购" : "入库";
   const totalQuantity = records.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0);
 
   els.editId.value = item.id;
@@ -947,7 +1044,7 @@ function getEditStatus() {
 }
 
 function setEditStatus(status) {
-  const value = status.includes("预购") ? "预购" : "入库";
+  const value = status.includes("愿望") ? "愿望清单" : status.includes("预购") ? "预购" : "入库";
   const input = document.querySelector(`input[name='editStatus'][value='${value}']`);
   if (input) input.checked = true;
 }
@@ -1048,16 +1145,17 @@ function numberValue(value) {
 }
 
 function renderStats() {
-  const totalQty = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const preorderQty = inventory
+  const counted = inventory.filter((item) => !isWishlistItem(item));
+  const totalQty = counted.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const preorderQty = counted
     .filter((item) => item.status.includes("预购"))
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const ownedQty = inventory
+  const ownedQty = counted
     .filter((item) => item.status.includes("入库"))
     .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
   els.totalQty.textContent = totalQty;
-  els.totalItems.textContent = groupInventory(inventory).length;
+  els.totalItems.textContent = groupInventory(counted).length;
   els.ownedQty.textContent = ownedQty;
   els.preorderQty.textContent = preorderQty;
 }
@@ -1073,12 +1171,19 @@ function renderCategories() {
   if (!els.categoryList) return;
   const sections = buildCategorySections(inventory);
   const activeKey = `${activeCategory.type}:${activeCategory.value}`;
+  const wishlistCount = groupInventory(inventory.filter(isWishlistItem)).length;
   els.activeCategoryLabel.textContent = activeCategory.label;
   els.categoryList.innerHTML = `
     <button class="category-item ${activeKey === "all:all" ? "active" : ""}" type="button" data-type="all" data-value="all" data-label="全部收藏">
       <span>全部收藏</span>
       <strong>${groupInventory(inventory).length}</strong>
     </button>
+    ${wishlistCount ? `
+      <button class="category-item ${activeKey === "status:wishlist" ? "active" : ""}" type="button" data-type="status" data-value="wishlist" data-label="愿望清单">
+        <span>愿望清单</span>
+        <strong>${wishlistCount}</strong>
+      </button>
+    ` : ""}
     ${sections.map((section) => `
       <section class="category-section">
         <h3>${escapeHtml(section.title)}</h3>
@@ -1128,6 +1233,7 @@ function categoryCounts(items, definitions) {
 
 function categoryMatches(item, category) {
   if (!category || category.type === "all") return true;
+  if (category.type === "status" && category.value === "wishlist") return isWishlistItem(item);
   const definitions = {
     maker: makerCategoryDefinitions(),
     tuner: tunerCategoryDefinitions(),
@@ -1143,6 +1249,10 @@ function categoryText(item) {
 
 function textMatchesCategory(text, definition) {
   return definition.keywords.some((keyword) => text.includes(keyword.toLowerCase()));
+}
+
+function isWishlistItem(item) {
+  return String(item.status || "").includes("愿望");
 }
 
 function makerCategoryDefinitions() {
