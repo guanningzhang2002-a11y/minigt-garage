@@ -129,6 +129,8 @@ let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
 let activeWishlistPage = 1;
 let wishlistPreviewTimer = null;
 const wishlistPageSize = 50;
+let heroSlideIndex = 0;
+let heroSlideTimer = null;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -219,6 +221,7 @@ renderQuickMatch();
 render();
 updateSyncStatus();
 toggleBackToTop();
+initHeroCarousel();
 if (isSyncReady() && !hasUnsyncedLocalChanges) {
   pullFromCloud({ silent: true });
 }
@@ -744,6 +747,56 @@ function toggleBackToTop() {
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function initHeroCarousel() {
+  const carousel = document.querySelector("#heroCarousel");
+  const slides = [...document.querySelectorAll(".hero-slide")];
+  const dots = document.querySelector("#heroDots");
+  if (!carousel || slides.length < 2 || !dots) return;
+
+  dots.innerHTML = slides.map((slide, index) => `
+    <button class="hero-dot ${index === 0 ? "active" : ""}" type="button" data-hero-slide="${index}" title="${escapeHtml(slide.dataset.label || `第 ${index + 1} 张`)}" aria-label="${escapeHtml(slide.dataset.label || `第 ${index + 1} 张`)}"></button>
+  `).join("");
+
+  document.querySelector("#heroPrevBtn")?.addEventListener("click", () => showHeroSlide(heroSlideIndex - 1, true));
+  document.querySelector("#heroNextBtn")?.addEventListener("click", () => showHeroSlide(heroSlideIndex + 1, true));
+  dots.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-hero-slide]");
+    if (button) showHeroSlide(Number(button.dataset.heroSlide), true);
+  });
+  carousel.closest(".hero")?.addEventListener("mouseenter", stopHeroCarousel);
+  carousel.closest(".hero")?.addEventListener("mouseleave", startHeroCarousel);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopHeroCarousel();
+    else startHeroCarousel();
+  });
+  showHeroSlide(0, false);
+  startHeroCarousel();
+}
+
+function showHeroSlide(nextIndex, restart) {
+  const slides = [...document.querySelectorAll(".hero-slide")];
+  if (!slides.length) return;
+  heroSlideIndex = (nextIndex + slides.length) % slides.length;
+  slides.forEach((slide, index) => slide.classList.toggle("active", index === heroSlideIndex));
+  document.querySelectorAll(".hero-dot").forEach((dot, index) => dot.classList.toggle("active", index === heroSlideIndex));
+  const label = document.querySelector("#heroSlideLabel");
+  if (label) label.textContent = slides[heroSlideIndex].dataset.label || "MOTORSPORT";
+  if (restart) {
+    stopHeroCarousel();
+    startHeroCarousel();
+  }
+}
+
+function startHeroCarousel() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || heroSlideTimer) return;
+  heroSlideTimer = window.setInterval(() => showHeroSlide(heroSlideIndex + 1, false), 6500);
+}
+
+function stopHeroCarousel() {
+  window.clearInterval(heroSlideTimer);
+  heroSlideTimer = null;
 }
 
 function saveCar(event) {

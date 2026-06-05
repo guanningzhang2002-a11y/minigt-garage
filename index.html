@@ -9,9 +9,22 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="race-rail race-rail-left" aria-hidden="true">
+      <span>F1</span><span>IMSA</span><span>GT3</span><span>LE MANS</span>
+    </div>
+    <div class="race-rail race-rail-right" aria-hidden="true">
+      <span>AO RACING</span><span>LB-WORKS</span><span>ENDURANCE</span><span>PADDOCK</span>
+    </div>
     <main class="app-shell">
       <section class="hero">
-        <img src="assets/collection-hero-clean.png" alt="MINIGT 收藏展示场景" />
+        <div class="hero-carousel" id="heroCarousel">
+          <img class="hero-slide active" src="assets/collection-hero-clean.png" alt="MINIGT 收藏展示场景" data-label="COLLECTION GARAGE" />
+          <img class="hero-slide" src="assets/hero-f1-night.jpg" alt="夜间方程式赛车" data-label="FORMULA / NIGHT RACE" />
+          <img class="hero-slide" src="assets/hero-imsa-gt3.jpg" alt="IMSA GT3 耐力赛" data-label="IMSA / GT3" />
+          <img class="hero-slide" src="assets/hero-le-mans.jpg" alt="勒芒雨夜耐力赛" data-label="LE MANS / ENDURANCE" />
+          <img class="hero-slide" src="assets/hero-pink-gt3.jpg" alt="粉色 GT3 赛车" data-label="AO RACING STYLE / GT3" />
+          <img class="hero-slide" src="assets/hero-lbworks-drift.jpg" alt="改装漂移赛车" data-label="LB-WORKS STYLE / DRIFT" />
+        </div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <p class="eyebrow">MINIGT COLLECTION GARAGE</p>
@@ -20,6 +33,14 @@
             <button class="primary" id="focusFormBtn" type="button">+ 新增车辆</button>
             <button class="secondary" id="wishlistBtn" type="button">愿望清单</button>
             <button class="secondary" id="exportBtn" type="button">导出 CSV</button>
+          </div>
+        </div>
+        <div class="hero-carousel-ui">
+          <span class="hero-slide-label" id="heroSlideLabel">COLLECTION GARAGE</span>
+          <div class="hero-carousel-controls">
+            <button class="hero-arrow" id="heroPrevBtn" type="button" title="上一张" aria-label="上一张">‹</button>
+            <div class="hero-dots" id="heroDots" aria-label="轮播图片选择"></div>
+            <button class="hero-arrow" id="heroNextBtn" type="button" title="下一张" aria-label="下一张">›</button>
           </div>
         </div>
       </section>
@@ -218,6 +239,6 @@
     <button class="back-to-top" id="backToTopBtn" type="button" title="回到顶部" aria-label="回到顶部">↑</button>
     <script src="assets/minigt-catalog.js"></script>
     <script src="assets/minigt-image-candidates.js?v=20260605-all-images2"></script>
-    <script src="app.js?v=20260605-pricecheck3"></script>
+    <script src="app.js?v=20260605-motorsport1"></script>
   </body>
 </html>

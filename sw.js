@@ -1,4 +1,4 @@
-const cacheName = "minigt-tracker-v35";
+const cacheName = "minigt-tracker-v36";
 const appShell = [
   "./",
   "./index.html",
@@ -7,6 +7,11 @@ const appShell = [
   "./manifest.webmanifest",
   "./assets/app-icon.svg",
   "./assets/collection-hero-clean.png",
+  "./assets/hero-f1-night.jpg",
+  "./assets/hero-imsa-gt3.jpg",
+  "./assets/hero-le-mans.jpg",
+  "./assets/hero-pink-gt3.jpg",
+  "./assets/hero-lbworks-drift.jpg",
   "./assets/minigt-catalog.js",
   "./assets/minigt-image-candidates.js"
 ];
