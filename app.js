@@ -1130,7 +1130,7 @@ function renderImagePicker(item) {
   }
 
   els.editImagePicker.innerHTML = `
-    <p>展示图片</p>
+    <p>展示图片 <span class="image-choice-count">· ${urls.length} 张可选</span></p>
     <div class="image-choice-grid">
       ${urls.map((url) => `
         <button class="${url === carImage(item) ? "selected" : ""}" type="button" data-image-url="${escapeHtml(url)}">

@@ -1139,6 +1139,12 @@ tbody tr:hover {
   gap: 8px;
 }
 
+.image-choice-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .image-choice-grid button {
   overflow: hidden;
   aspect-ratio: 4 / 3;

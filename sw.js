@@ -1,4 +1,4 @@
-const cacheName = "minigt-tracker-v31";
+const cacheName = "minigt-tracker-v32";
 const appShell = [
   "./",
   "./index.html",
@@ -33,7 +33,9 @@ self.addEventListener("fetch", (event) => {
     "/index.html",
     "/app.js",
     "/styles.css",
-    "/manifest.webmanifest"
+    "/manifest.webmanifest",
+    "/assets/minigt-catalog.js",
+    "/assets/minigt-image-candidates.js"
   ].some((path) => url.pathname.endsWith(path));
 
   if (freshFirst) {
