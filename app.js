@@ -1708,13 +1708,7 @@ function rowActions(item) {
 }
 
 function goofishSearchUrl(item) {
-  const title = String(item.model || item.title || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 80);
-  const query = ["MINI GT", item.number ? `MGT${String(item.number).padStart(5, "0")}` : "", title]
-    .filter(Boolean)
-    .join(" ");
+  const query = ["MINIGT", String(item.number || "").trim()].filter(Boolean).join(" ");
   return `https://www.goofish.com/search?q=${encodeURIComponent(query)}`;
 }
 
