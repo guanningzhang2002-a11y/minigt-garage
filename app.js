@@ -861,10 +861,11 @@ function closeWishlistModal() {
 
 function renderWishlistCatalog() {
   const query = els.wishlistSearch.value.trim().toLowerCase();
+  const queryNumber = query.replace(/^#|^mgt0*/i, "").replace(/\D/g, "");
   const catalog = catalogList();
   renderWishlistFilters(catalog);
   const items = catalog
-    .filter((item) => wishlistCategoryMatches(item, activeWishlistCategory))
+    .filter((item) => query || wishlistCategoryMatches(item, activeWishlistCategory))
     .filter((item) => {
       const categoryText = [
         ...makerCategoryDefinitions(),
@@ -875,7 +876,13 @@ function renderWishlistCatalog() {
         .map((definition) => definition.label)
         .join(" ");
       const haystack = [item.number, item.title, categoryText].join(" ").toLowerCase();
-      return !query || haystack.includes(query);
+      return !query || haystack.includes(query) || (queryNumber && item.number === String(Number(queryNumber)));
+    })
+    .sort((a, b) => {
+      if (!queryNumber) return numberValue(b.number) - numberValue(a.number);
+      const aExact = a.number === String(Number(queryNumber));
+      const bExact = b.number === String(Number(queryNumber));
+      return Number(bExact) - Number(aExact) || numberValue(b.number) - numberValue(a.number);
     });
   const totalPages = Math.max(1, Math.ceil(items.length / wishlistPageSize));
   activeWishlistPage = Math.min(Math.max(activeWishlistPage, 1), totalPages);
@@ -929,6 +936,7 @@ function handleWishlistAction(event) {
 
 function handleWishlistSearch() {
   activeWishlistPage = 1;
+  activeWishlistCategory = { type: "all", value: "all", label: "全部" };
   renderWishlistCatalog();
 }
 
