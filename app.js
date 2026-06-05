@@ -131,7 +131,6 @@ let wishlistPreviewTimer = null;
 const wishlistPageSize = 50;
 let heroSlideIndex = 0;
 let heroSlideTimer = null;
-let quickEntryMode = false;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -472,7 +471,6 @@ function injectProductTools() {
     actions.insertAdjacentHTML("beforeend", `
       <button class="secondary" id="statsBtn" type="button">统计</button>
       <button class="secondary" id="healthBtn" type="button">收藏体检</button>
-      <button class="secondary" id="quickEntryBtn" type="button">快速录入</button>
     `);
   }
 
@@ -494,15 +492,6 @@ function injectProductTools() {
     document.body.insertAdjacentHTML("beforeend", `<div class="save-toast" id="saveToast" aria-live="polite"></div>`);
   }
 
-  if (!document.querySelector("#quickEntryKeepOpen")) {
-    els.form.querySelector(".wide")?.insertAdjacentHTML("beforebegin", `
-      <label class="quick-entry-option">
-        <input id="quickEntryKeepOpen" type="checkbox" />
-        <span>保存后继续录入下一台</span>
-      </label>
-    `);
-  }
-
   if (!document.querySelector("#editWishlistMeta")) {
     els.editPackageManager.insertAdjacentHTML("beforebegin", `
       <div class="wishlist-meta" id="editWishlistMeta">
@@ -518,7 +507,6 @@ function injectProductTools() {
 
   document.querySelector("#statsBtn")?.addEventListener("click", openStatsModal);
   document.querySelector("#healthBtn")?.addEventListener("click", openHealthModal);
-  document.querySelector("#quickEntryBtn")?.addEventListener("click", openQuickEntry);
   document.querySelector("#closeProductToolsBtn")?.addEventListener("click", closeProductTools);
   document.querySelector("#productToolsModal")?.addEventListener("click", (event) => {
     if (event.target === document.querySelector("#productToolsModal")) closeProductTools();
@@ -538,13 +526,6 @@ function closeProductTools() {
   const modal = document.querySelector("#productToolsModal");
   modal.classList.remove("visible");
   modal.setAttribute("aria-hidden", "true");
-}
-
-function openQuickEntry() {
-  quickEntryMode = true;
-  openAddModal();
-  document.querySelector("#quickEntryKeepOpen").checked = true;
-  document.querySelector("#addTitle").textContent = "快速录入";
 }
 
 function showSaveToast(message, state = "") {
@@ -619,35 +600,6 @@ function openHealthModal() {
     closeProductTools();
     editCar(Number(button.dataset.healthId));
   }));
-}
-
-function openDetail(id) {
-  const item = inventory.find((entry) => entry.id === id);
-  if (!item) return;
-  const records = inventory.filter((entry) => entry.number === item.number);
-  const images = imageCandidates(item);
-  openProductTools(`#${item.number} ${item.model}`, "COLLECTION DETAIL", `
-    <div class="detail-layout">
-      <div class="detail-gallery">${images.slice(0, 8).map((url) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(item.model)}" />`).join("")}</div>
-      <div class="detail-facts">
-        <span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span>
-        <dl>
-          <div><dt>包装</dt><dd>${escapeHtml(packageSummaryText(records))}</dd></div>
-          <div><dt>总数量</dt><dd>${records.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0)}</dd></div>
-          <div><dt>备注</dt><dd>${escapeHtml([...new Set(records.map((entry) => entry.note).filter(Boolean))].join("；") || "无")}</dd></div>
-        </dl>
-        <div class="detail-actions">
-          ${item.productUrl ? `<a class="secondary" href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">官网产品页</a>` : ""}
-          <a class="secondary" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer">闲鱼查价</a>
-          <button class="primary" type="button" id="detailEditBtn">编辑收藏</button>
-        </div>
-      </div>
-    </div>
-  `);
-  document.querySelector("#detailEditBtn")?.addEventListener("click", () => {
-    closeProductTools();
-    editCar(id);
-  });
 }
 
 function openSyncModal() {
@@ -1016,18 +968,10 @@ function saveCar(event) {
   if (index >= 0) inventory[index] = record;
   else inventory.unshift(record);
 
-  const keepOpen = document.querySelector("#quickEntryKeepOpen")?.checked;
   persist();
   resetForm();
   render();
-  if (keepOpen) {
-    quickEntryMode = true;
-    document.querySelector("#quickEntryKeepOpen").checked = true;
-    fields.number.focus();
-  } else {
-    quickEntryMode = false;
-    closeAddModal();
-  }
+  closeAddModal();
 }
 
 function resetForm() {
@@ -1042,7 +986,7 @@ function resetForm() {
 
 function openAddModal() {
   resetForm();
-  document.querySelector("#addTitle").textContent = quickEntryMode ? "快速录入" : "记录车辆";
+  document.querySelector("#addTitle").textContent = "记录车辆";
   els.addModal.classList.add("visible");
   els.addModal.setAttribute("aria-hidden", "false");
   fields.number.focus();
@@ -1051,7 +995,6 @@ function openAddModal() {
 function closeAddModal() {
   els.addModal.classList.remove("visible");
   els.addModal.setAttribute("aria-hidden", "true");
-  quickEntryMode = false;
 }
 
 function openWishlistModal() {
@@ -1624,6 +1567,27 @@ function render() {
   renderFilters();
   renderCategories();
   renderInventory(filtered);
+  applyRevealMotion();
+}
+
+function applyRevealMotion() {
+  const targets = document.querySelectorAll(".stat-panel, .category-section, tbody tr, .photo-card");
+  if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    targets.forEach((target) => target.classList.add("revealed"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("revealed");
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: .08 });
+  targets.forEach((target, index) => {
+    target.classList.add("reveal-item");
+    target.style.transitionDelay = `${Math.min(index % 8, 7) * 28}ms`;
+    observer.observe(target);
+  });
 }
 
 function filteredInventory() {
@@ -1635,6 +1599,7 @@ function filteredInventory() {
       const haystack = [item.status, item.number, item.model, item.packageType, item.note].join(" ").toLowerCase();
       return (!query || haystack.includes(query))
         && (status === "all" || item.status === status)
+        && (activeCategory.type !== "all" || !isWishlistItem(item))
         && categoryMatches(item, activeCategory);
     })
     .sort((a, b) => {
@@ -1667,7 +1632,7 @@ function renderStats() {
 }
 
 function renderFilters() {
-  const statuses = [...new Set(inventory.map((item) => item.status).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const statuses = [...new Set(inventory.filter((item) => !isWishlistItem(item)).map((item) => item.status).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const current = els.statusFilter.value;
   els.statusFilter.innerHTML = `<option value="all">全部状态</option>${statuses.map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(status)}</option>`).join("")}`;
   els.statusFilter.value = statuses.includes(current) ? current : "all";
@@ -1675,14 +1640,15 @@ function renderFilters() {
 
 function renderCategories() {
   if (!els.categoryList) return;
-  const sections = buildCategorySections(inventory);
+  const collectionItems = inventory.filter((item) => !isWishlistItem(item));
+  const sections = buildCategorySections(collectionItems);
   const activeKey = `${activeCategory.type}:${activeCategory.value}`;
   const wishlistCount = groupInventory(inventory.filter(isWishlistItem)).length;
   els.activeCategoryLabel.textContent = activeCategory.label;
   els.categoryList.innerHTML = `
     <button class="category-item ${activeKey === "all:all" ? "active" : ""}" type="button" data-type="all" data-value="all" data-label="全部收藏">
       <span>全部收藏</span>
-      <strong>${groupInventory(inventory).length}</strong>
+        <strong>${groupInventory(collectionItems).length}</strong>
     </button>
     ${wishlistCount ? `
       <button class="category-item ${activeKey === "status:wishlist" ? "active" : ""}" type="button" data-type="status" data-value="wishlist" data-label="愿望清单">
@@ -1979,7 +1945,6 @@ function rowActions(item) {
   return `
     <div class="row-actions">
       <a class="price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer" title="在闲鱼搜索当前在售价格">闲鱼查价</a>
-      <button type="button" title="查看详情" data-action="detail" data-id="${item.id}">详情</button>
       ${canPromote ? `<button type="button" title="快速转为入库" data-action="promote" data-id="${item.id}">入库</button>` : ""}
       <button type="button" title="编辑" data-action="${hasMultiple ? "manage" : "edit"}" data-id="${item.id}">${hasMultiple ? "管理" : "编辑"}</button>
       <button type="button" title="删除" data-action="${hasMultiple ? "delete-group" : "delete"}" data-id="${item.id}">删除</button>
@@ -2000,7 +1965,6 @@ function bindActionButtons() {
       if (button.dataset.action === "manage") manageGroup(id);
       if (button.dataset.action === "delete") deleteCar(id);
       if (button.dataset.action === "delete-group") deleteGroup(id);
-      if (button.dataset.action === "detail") openDetail(id);
       if (button.dataset.action === "promote") promoteToOwned(id);
     });
   });
