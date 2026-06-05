@@ -35,72 +35,6 @@ button {
   cursor: pointer;
 }
 
-.race-rail {
-  position: fixed;
-  top: 430px;
-  bottom: 36px;
-  z-index: 0;
-  width: max(74px, calc((100vw - 1220px) / 2));
-  display: none;
-  align-content: start;
-  gap: 34px;
-  padding-top: 24px;
-  color: #9aa2ac;
-  pointer-events: none;
-}
-
-.race-rail::before,
-.race-rail::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: #d9dee4;
-}
-
-.race-rail::after {
-  width: 4px;
-  background: var(--accent);
-  opacity: 0.24;
-}
-
-.race-rail-left {
-  left: 0;
-  justify-items: end;
-  padding-right: 24px;
-}
-
-.race-rail-left::before {
-  right: 12px;
-}
-
-.race-rail-left::after {
-  right: 17px;
-}
-
-.race-rail-right {
-  right: 0;
-  justify-items: start;
-  padding-left: 24px;
-}
-
-.race-rail-right::before {
-  left: 12px;
-}
-
-.race-rail-right::after {
-  left: 17px;
-}
-
-.race-rail span {
-  writing-mode: vertical-rl;
-  color: #8d96a1;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
 .app-shell {
   position: relative;
   z-index: 1;
@@ -1496,12 +1430,6 @@ tbody tr:hover {
   margin: 18px 0 6px;
   color: var(--muted);
   text-align: center;
-}
-
-@media (min-width: 1440px) {
-  .race-rail {
-    display: grid;
-  }
 }
 
 @media (max-width: 980px) {
