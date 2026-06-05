@@ -854,7 +854,7 @@ function wishlistCatalogCard(item) {
         <h3>${escapeHtml(item.title)}</h3>
       </div>
       <div class="wishlist-card-actions">
-        <a class="secondary price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer">闲鱼查价</a>
+        <a class="secondary price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer" title="闲鱼查价" aria-label="闲鱼查价">查</a>
         <button class="${existing ? "secondary" : "primary"}" type="button" data-wishlist-number="${escapeHtml(item.number)}" ${existing ? "disabled" : ""}>${statusText}</button>
       </div>
     </article>

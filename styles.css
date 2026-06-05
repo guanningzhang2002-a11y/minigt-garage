@@ -1019,11 +1019,11 @@ tbody tr:hover {
 .wishlist-card-actions {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 34px minmax(0, 1fr);
   gap: 8px;
+  align-items: center;
 }
 
-.wishlist-card-actions .price-check-link,
 .price-check-link.secondary {
   min-height: 38px;
   display: inline-flex;
@@ -1036,6 +1036,28 @@ tbody tr:hover {
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
+}
+
+.wishlist-card-actions .price-check-link {
+  width: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #efb3b7;
+  border-radius: 50%;
+  background: #fff7f7;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wishlist-card-actions .price-check-link:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
 }
 
 .wishlist-card button:disabled {
