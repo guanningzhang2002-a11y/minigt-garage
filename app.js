@@ -164,6 +164,7 @@ const els = {
   editPreview: document.querySelector("#editPreview"),
   editImageUrl: document.querySelector("#editImageUrl"),
   editImagePicker: document.querySelector("#editImagePicker"),
+  editPriceCheckBtn: document.querySelector("#editPriceCheckBtn"),
   editPackageManager: document.querySelector("#editPackageManager"),
   editQuantity: document.querySelector("#editQuantity"),
   editNote: document.querySelector("#editNote"),
@@ -852,7 +853,10 @@ function wishlistCatalogCard(item) {
         <strong>#${escapeHtml(item.number)}</strong>
         <h3>${escapeHtml(item.title)}</h3>
       </div>
-      <button class="${existing ? "secondary" : "primary"}" type="button" data-wishlist-number="${escapeHtml(item.number)}" ${existing ? "disabled" : ""}>${statusText}</button>
+      <div class="wishlist-card-actions">
+        <a class="secondary price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer">闲鱼查价</a>
+        <button class="${existing ? "secondary" : "primary"}" type="button" data-wishlist-number="${escapeHtml(item.number)}" ${existing ? "disabled" : ""}>${statusText}</button>
+      </div>
     </article>
   `;
 }
@@ -1047,6 +1051,7 @@ function editCar(id) {
     </div>
   `;
   els.editImageUrl.value = carImage(item);
+  els.editPriceCheckBtn.href = goofishSearchUrl(item);
   renderImagePicker(item);
   renderPackageManager(records);
   setLegacyEditFieldsVisible(false);
@@ -1695,10 +1700,22 @@ function rowActions(item) {
   const hasMultiple = item.records && item.records.length > 1;
   return `
     <div class="row-actions">
+      <a class="price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer" title="在闲鱼搜索当前在售价格">闲鱼查价</a>
       <button type="button" title="编辑" data-action="${hasMultiple ? "manage" : "edit"}" data-id="${item.id}">${hasMultiple ? "管理" : "编辑"}</button>
       <button type="button" title="删除" data-action="${hasMultiple ? "delete-group" : "delete"}" data-id="${item.id}">删除</button>
     </div>
   `;
+}
+
+function goofishSearchUrl(item) {
+  const title = String(item.model || item.title || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  const query = ["MINI GT", item.number ? `MGT${String(item.number).padStart(5, "0")}` : "", title]
+    .filter(Boolean)
+    .join(" ");
+  return `https://www.goofish.com/search?q=${encodeURIComponent(query)}`;
 }
 
 function bindActionButtons() {
