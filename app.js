@@ -131,6 +131,7 @@ let wishlistPreviewTimer = null;
 const wishlistPageSize = 50;
 let heroSlideIndex = 0;
 let heroSlideTimer = null;
+let quickEntryMode = false;
 
 const fields = {
   id: document.querySelector("#carId"),
@@ -178,6 +179,7 @@ const els = {
 };
 
 injectSyncUi();
+injectProductTools();
 
 document.querySelector("#focusFormBtn").addEventListener("click", openAddModal);
 document.querySelector("#wishlistBtn").addEventListener("click", openWishlistModal);
@@ -199,6 +201,9 @@ els.wishlistResults?.addEventListener("click", handleWishlistAction);
 els.wishlistResults?.addEventListener("mouseover", startWishlistPreview);
 els.wishlistResults?.addEventListener("mouseout", stopWishlistPreview);
 els.editForm.addEventListener("submit", saveEdit);
+document.querySelector("#editStatusField")?.addEventListener("change", () => {
+  document.querySelector("#editWishlistMeta")?.classList.toggle("visible", getEditStatus().includes("愿望"));
+});
 document.querySelector("#closeEditBtn").addEventListener("click", closeEditModal);
 document.querySelector("#deleteEditBtn").addEventListener("click", deleteFromEdit);
 els.editModal.addEventListener("click", (event) => {
@@ -264,6 +269,8 @@ function normalizeItem(item) {
     variant: "",
     quantity: Math.max(1, Number(item.quantity || 1)),
     price: item.price || "",
+    targetPrice: item.targetPrice || "",
+    priority: item.priority || "普通",
     imageUrl: item.imageUrl || "",
     productUrl: item.productUrl || "",
     note: migrated.note,
@@ -334,6 +341,7 @@ function persist() {
   saveLocalOnly();
   saveLocalBackup();
   updateSyncStatus();
+  showSaveToast("本地已保存，尚未上传云端", "dirty");
 }
 
 function saveLocalOnly() {
@@ -456,6 +464,190 @@ function injectSyncUi() {
     if (saveSyncConfigFromForm()) pushToCloud({ silent: false });
   });
   document.querySelector("#clearSyncBtn")?.addEventListener("click", clearSyncSettings);
+}
+
+function injectProductTools() {
+  const actions = document.querySelector(".hero-actions");
+  if (actions && !document.querySelector("#statsBtn")) {
+    actions.insertAdjacentHTML("beforeend", `
+      <button class="secondary" id="statsBtn" type="button">统计</button>
+      <button class="secondary" id="healthBtn" type="button">收藏体检</button>
+      <button class="secondary" id="quickEntryBtn" type="button">快速录入</button>
+    `);
+  }
+
+  if (!document.querySelector("#productToolsModal")) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="edit-modal" id="productToolsModal" aria-hidden="true">
+        <div class="edit-dialog tools-dialog" role="dialog" aria-modal="true" aria-labelledby="productToolsTitle">
+          <div class="edit-head">
+            <div><p id="productToolsEyebrow">GARAGE INSIGHTS</p><h2 id="productToolsTitle">收藏统计</h2></div>
+            <button class="icon-btn" id="closeProductToolsBtn" type="button" title="关闭">×</button>
+          </div>
+          <div id="productToolsContent"></div>
+        </div>
+      </div>
+    `);
+  }
+
+  if (!document.querySelector("#saveToast")) {
+    document.body.insertAdjacentHTML("beforeend", `<div class="save-toast" id="saveToast" aria-live="polite"></div>`);
+  }
+
+  if (!document.querySelector("#quickEntryKeepOpen")) {
+    els.form.querySelector(".wide")?.insertAdjacentHTML("beforebegin", `
+      <label class="quick-entry-option">
+        <input id="quickEntryKeepOpen" type="checkbox" />
+        <span>保存后继续录入下一台</span>
+      </label>
+    `);
+  }
+
+  if (!document.querySelector("#editWishlistMeta")) {
+    els.editPackageManager.insertAdjacentHTML("beforebegin", `
+      <div class="wishlist-meta" id="editWishlistMeta">
+        <label>愿望优先级
+          <select id="editPriority"><option>普通</option><option>优先</option><option>暂缓</option></select>
+        </label>
+        <label>目标价格
+          <input id="editTargetPrice" inputmode="decimal" placeholder="例如：120" />
+        </label>
+      </div>
+    `);
+  }
+
+  document.querySelector("#statsBtn")?.addEventListener("click", openStatsModal);
+  document.querySelector("#healthBtn")?.addEventListener("click", openHealthModal);
+  document.querySelector("#quickEntryBtn")?.addEventListener("click", openQuickEntry);
+  document.querySelector("#closeProductToolsBtn")?.addEventListener("click", closeProductTools);
+  document.querySelector("#productToolsModal")?.addEventListener("click", (event) => {
+    if (event.target === document.querySelector("#productToolsModal")) closeProductTools();
+  });
+}
+
+function openProductTools(title, eyebrow, html) {
+  document.querySelector("#productToolsTitle").textContent = title;
+  document.querySelector("#productToolsEyebrow").textContent = eyebrow;
+  document.querySelector("#productToolsContent").innerHTML = html;
+  const modal = document.querySelector("#productToolsModal");
+  modal.classList.add("visible");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeProductTools() {
+  const modal = document.querySelector("#productToolsModal");
+  modal.classList.remove("visible");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function openQuickEntry() {
+  quickEntryMode = true;
+  openAddModal();
+  document.querySelector("#quickEntryKeepOpen").checked = true;
+  document.querySelector("#addTitle").textContent = "快速录入";
+}
+
+function showSaveToast(message, state = "") {
+  const toast = document.querySelector("#saveToast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.className = `save-toast visible ${state}`;
+  window.clearTimeout(showSaveToast.timer);
+  showSaveToast.timer = window.setTimeout(() => toast.classList.remove("visible"), 2600);
+}
+
+function distribution(items, definitions) {
+  return definitions.map((definition) => ({
+    label: definition.label,
+    count: groupInventory(items.filter((item) => textMatchesCategory(categoryText(item), definition))).length
+  })).filter((item) => item.count).sort((a, b) => b.count - a.count);
+}
+
+function metricBars(title, values) {
+  const max = Math.max(1, ...values.map((item) => item.count));
+  return `<section class="metric-section"><h3>${escapeHtml(title)}</h3><div class="metric-bars">${
+    values.slice(0, 10).map((item) => `<div><span>${escapeHtml(item.label)}</span><i><b style="width:${Math.round(item.count / max * 100)}%"></b></i><strong>${item.count}</strong></div>`).join("")
+  }</div></section>`;
+}
+
+function openStatsModal() {
+  const counted = inventory.filter((item) => !isWishlistItem(item));
+  const grouped = groupInventory(counted);
+  const owned = counted.filter((item) => item.status.includes("入库")).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const preorder = counted.filter((item) => item.status.includes("预购")).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const boxed = counted.filter((item) => item.packageType === "盒装").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const carded = counted.filter((item) => item.packageType === "挂卡").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  openProductTools("收藏统计", "GARAGE INSIGHTS", `
+    <div class="insight-summary">
+      <article><span>收藏数量</span><strong>${counted.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</strong></article>
+      <article><span>车型种类</span><strong>${grouped.length}</strong></article>
+      <article><span>愿望清单</span><strong>${groupInventory(inventory.filter(isWishlistItem)).length}</strong></article>
+      <article><span>待上传状态</span><strong>${hasUnsyncedLocalChanges ? "有" : "无"}</strong></article>
+    </div>
+    <div class="insight-grid">
+      ${metricBars("收藏状态", [{ label: "入库", count: owned }, { label: "预购", count: preorder }])}
+      ${metricBars("包装类型", [{ label: "盒装", count: boxed }, { label: "挂卡", count: carded }])}
+      ${metricBars("车厂品牌", distribution(counted, makerCategoryDefinitions()))}
+      ${metricBars("赛事与主题", distribution(counted, themeCategoryDefinitions()))}
+    </div>
+  `);
+}
+
+function healthIssues() {
+  const grouped = groupInventory(inventory);
+  return [
+    { label: "缺少官网车型资料", items: grouped.filter((item) => !getCatalogItem(item.number)) },
+    { label: "使用占位图片", items: grouped.filter((item) => !item.imageUrl) },
+    { label: "同车型存在多条包装记录", items: grouped.filter((item) => item.records.length > 1) },
+    { label: "备注为空", items: grouped.filter((item) => !item.note) },
+    { label: "编号可能异常", items: grouped.filter((item) => !item.number || numberValue(item.number) < 1) }
+  ];
+}
+
+function openHealthModal() {
+  const issues = healthIssues();
+  openProductTools("收藏体检", "GARAGE CHECK", `
+    <p class="tools-copy">这里不会自动修改你的收藏，只把值得检查的记录集中列出来。</p>
+    <div class="health-list">${issues.map((issue) => `
+      <section>
+        <header><strong>${escapeHtml(issue.label)}</strong><span>${issue.items.length}</span></header>
+        ${issue.items.length ? `<div>${issue.items.slice(0, 12).map((item) => `<button type="button" data-health-id="${item.id}">#${escapeHtml(item.number)} ${escapeHtml(item.model)}</button>`).join("")}</div>` : `<p>没有发现问题</p>`}
+      </section>
+    `).join("")}</div>
+  `);
+  document.querySelectorAll("[data-health-id]").forEach((button) => button.addEventListener("click", () => {
+    closeProductTools();
+    editCar(Number(button.dataset.healthId));
+  }));
+}
+
+function openDetail(id) {
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+  const records = inventory.filter((entry) => entry.number === item.number);
+  const images = imageCandidates(item);
+  openProductTools(`#${item.number} ${item.model}`, "COLLECTION DETAIL", `
+    <div class="detail-layout">
+      <div class="detail-gallery">${images.slice(0, 8).map((url) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(item.model)}" />`).join("")}</div>
+      <div class="detail-facts">
+        <span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span>
+        <dl>
+          <div><dt>包装</dt><dd>${escapeHtml(packageSummaryText(records))}</dd></div>
+          <div><dt>总数量</dt><dd>${records.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0)}</dd></div>
+          <div><dt>备注</dt><dd>${escapeHtml([...new Set(records.map((entry) => entry.note).filter(Boolean))].join("；") || "无")}</dd></div>
+        </dl>
+        <div class="detail-actions">
+          ${item.productUrl ? `<a class="secondary" href="${escapeHtml(item.productUrl)}" target="_blank" rel="noreferrer">官网产品页</a>` : ""}
+          <a class="secondary" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer">闲鱼查价</a>
+          <button class="primary" type="button" id="detailEditBtn">编辑收藏</button>
+        </div>
+      </div>
+    </div>
+  `);
+  document.querySelector("#detailEditBtn")?.addEventListener("click", () => {
+    closeProductTools();
+    editCar(id);
+  });
 }
 
 function openSyncModal() {
@@ -581,7 +773,9 @@ function inventoryHash(items) {
     packageType: item.packageType || "盒装",
     note: item.note || "",
     imageUrl: item.imageUrl || "",
-    productUrl: item.productUrl || ""
+    productUrl: item.productUrl || "",
+    targetPrice: item.targetPrice || "",
+    priority: item.priority || "普通"
   })).sort((a, b) => {
     if (a.number !== b.number) return a.number.localeCompare(b.number);
     if (a.packageType !== b.packageType) return a.packageType.localeCompare(b.packageType);
@@ -642,11 +836,13 @@ async function pushToCloud({ silent } = { silent: true }) {
       markLocalDirty();
     }
     setSyncMessage(`已验证上传 ${uploadSnapshot.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    showSaveToast("云端已更新并完成核对", "synced");
     if (!silent) closeSyncModal();
   } catch (error) {
     markLocalDirty();
     saveLocalBackup();
     setSyncMessage("上传未验证，本地改动已保留");
+    showSaveToast("上传失败，本地数据仍然保留", "error");
     if (!silent) alert(`同步失败：${error.message}`);
   } finally {
     syncBusy = false;
@@ -732,7 +928,11 @@ function updateSyncStatus() {
 
 function setSyncMessage(message) {
   const status = document.querySelector("#syncStatus");
-  if (status) status.textContent = message;
+  if (status) {
+    status.textContent = message;
+    status.classList.toggle("dirty", hasUnsyncedLocalChanges);
+    status.classList.toggle("synced", isSyncReady() && !hasUnsyncedLocalChanges);
+  }
 }
 
 function registerServiceWorker() {
@@ -816,10 +1016,18 @@ function saveCar(event) {
   if (index >= 0) inventory[index] = record;
   else inventory.unshift(record);
 
+  const keepOpen = document.querySelector("#quickEntryKeepOpen")?.checked;
   persist();
   resetForm();
   render();
-  closeAddModal();
+  if (keepOpen) {
+    quickEntryMode = true;
+    document.querySelector("#quickEntryKeepOpen").checked = true;
+    fields.number.focus();
+  } else {
+    quickEntryMode = false;
+    closeAddModal();
+  }
 }
 
 function resetForm() {
@@ -834,6 +1042,7 @@ function resetForm() {
 
 function openAddModal() {
   resetForm();
+  document.querySelector("#addTitle").textContent = quickEntryMode ? "快速录入" : "记录车辆";
   els.addModal.classList.add("visible");
   els.addModal.setAttribute("aria-hidden", "false");
   fields.number.focus();
@@ -842,6 +1051,7 @@ function openAddModal() {
 function closeAddModal() {
   els.addModal.classList.remove("visible");
   els.addModal.setAttribute("aria-hidden", "true");
+  quickEntryMode = false;
 }
 
 function openWishlistModal() {
@@ -912,6 +1122,7 @@ function wishlistCatalogCard(item) {
       <div>
         <strong>#${escapeHtml(item.number)}</strong>
         <h3>${escapeHtml(item.title)}</h3>
+        ${existing && isWishlistItem(existing) ? `<p class="wishlist-meta-line">${escapeHtml(existing.priority || "普通")}${existing.targetPrice ? ` · 目标 ¥${escapeHtml(existing.targetPrice)}` : ""}</p>` : ""}
       </div>
       <div class="wishlist-card-actions">
         <a class="secondary price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer" title="闲鱼查价" aria-label="闲鱼查价">查</a>
@@ -1102,6 +1313,9 @@ function editCar(id) {
   els.editTitle.textContent = item.model;
   els.editQuantity.value = item.quantity || 1;
   els.editNote.value = item.note || "";
+  document.querySelector("#editPriority").value = item.priority || "普通";
+  document.querySelector("#editTargetPrice").value = item.targetPrice || "";
+  document.querySelector("#editWishlistMeta").classList.toggle("visible", isWishlistItem(item));
   setEditStatus(status);
   setEditPackageType(item.packageType || "盒装");
   els.editPreview.innerHTML = `
@@ -1151,7 +1365,9 @@ function saveEdit(event) {
   const baseItem = normalizeItem({
     ...item,
     status: selectedStatus,
-    imageUrl: selectedImage || item.imageUrl
+    imageUrl: selectedImage || item.imageUrl,
+    priority: document.querySelector("#editPriority").value,
+    targetPrice: document.querySelector("#editTargetPrice").value.trim()
   });
   const rebuilt = packageRows.map((row, index) => normalizeItem({
     ...baseItem,
@@ -1759,9 +1975,12 @@ function hashString(value) {
 
 function rowActions(item) {
   const hasMultiple = item.records && item.records.length > 1;
+  const canPromote = isWishlistItem(item) || String(item.status || "").includes("预购");
   return `
     <div class="row-actions">
       <a class="price-check-link" href="${escapeHtml(goofishSearchUrl(item))}" target="_blank" rel="noreferrer" title="在闲鱼搜索当前在售价格">闲鱼查价</a>
+      <button type="button" title="查看详情" data-action="detail" data-id="${item.id}">详情</button>
+      ${canPromote ? `<button type="button" title="快速转为入库" data-action="promote" data-id="${item.id}">入库</button>` : ""}
       <button type="button" title="编辑" data-action="${hasMultiple ? "manage" : "edit"}" data-id="${item.id}">${hasMultiple ? "管理" : "编辑"}</button>
       <button type="button" title="删除" data-action="${hasMultiple ? "delete-group" : "delete"}" data-id="${item.id}">删除</button>
     </div>
@@ -1781,8 +2000,20 @@ function bindActionButtons() {
       if (button.dataset.action === "manage") manageGroup(id);
       if (button.dataset.action === "delete") deleteCar(id);
       if (button.dataset.action === "delete-group") deleteGroup(id);
+      if (button.dataset.action === "detail") openDetail(id);
+      if (button.dataset.action === "promote") promoteToOwned(id);
     });
   });
+}
+
+function promoteToOwned(id) {
+  const item = inventory.find((entry) => entry.id === id);
+  if (!item) return;
+  inventory.forEach((entry) => {
+    if (entry.number === item.number) entry.status = "入库";
+  });
+  persist();
+  render();
 }
 
 function statusClass(status) {

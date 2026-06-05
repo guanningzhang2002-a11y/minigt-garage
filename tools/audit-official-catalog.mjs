@@ -6,7 +6,7 @@ await import("../assets/minigt-catalog.js");
 await import("../assets/minigt-image-candidates.js");
 
 const baseUrl = "https://minigt.tsm-models.com/";
-const maxNumber = 1400;
+const maxNumber = Number(process.env.MINIGT_MAX_NUMBER || 2000);
 const concurrency = 10;
 const catalog = window.MINIGT_CATALOG || {};
 const candidates = window.MINIGT_IMAGE_CANDIDATES || {};
