@@ -1058,10 +1058,11 @@ function wishlistCatalogCard(item) {
   const statusText = existing ? (isWishlistItem(existing) ? "已在愿望清单" : "已在收藏") : "加入愿望清单";
   const imageUrls = wishlistImageCandidates(item);
   const productUrl = item.productUrl || knownProductUrls[item.number] || "";
-  const image = `<img src="${escapeHtml(imageUrls[0] || generatedCarImage(item))}" alt="${escapeHtml(item.title)}" loading="lazy" data-preview-images="${escapeHtml(imageUrls.join("|"))}" />`;
+  const previewUrl = imageUrls[0] || generatedCarImage(item);
+  const image = `<img src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" data-preview-images="${escapeHtml(imageUrls.join("|"))}" />`;
   return `
     <article class="wishlist-card">
-      ${productUrl ? `<a class="wishlist-image-link" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer" title="打开产品页">${image}</a>` : image}
+      ${productUrl ? `<a class="wishlist-image-link image-preview-target" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer" title="打开产品页" data-preview="${escapeHtml(previewUrl)}" data-title="${escapeHtml(item.title)}" data-subtitle="#${escapeHtml(item.number)}">${image}</a>` : `<div class="image-preview-target" data-preview="${escapeHtml(previewUrl)}" data-title="${escapeHtml(item.title)}" data-subtitle="#${escapeHtml(item.number)}">${image}</div>`}
       <div>
         <strong>#${escapeHtml(item.number)}</strong>
         <h3>${escapeHtml(item.title)}</h3>
@@ -1849,7 +1850,7 @@ function renderTable(items) {
 
 function tableRow(item) {
   return `
-    <tr class="preview-target" data-preview="${escapeHtml(carImage(item))}" data-title="${escapeHtml(item.model)}" data-subtitle="#${escapeHtml(item.number)} · ${escapeHtml(item.packageText || item.packageType)} · 数量 ${Number(item.quantity || 0)}">
+    <tr class="preview-target">
       <td>${imageMarkup(item, "thumb")}</td>
       <td><span class="${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
       <td class="number-cell">#${escapeHtml(item.number)}</td>
@@ -1885,7 +1886,7 @@ function imageMarkup(item, mode) {
   const src = carImage(item);
   const fallback = !item.imageUrl ? " image-fallback" : "";
   const image = `
-    <div class="car-image car-image-${mode}${fallback}">
+    <div class="car-image car-image-${mode}${fallback} image-preview-target" data-preview="${escapeHtml(src)}" data-title="${escapeHtml(item.model)}" data-subtitle="#${escapeHtml(item.number)} · ${escapeHtml(item.packageText || item.packageType)} · 数量 ${Number(item.quantity || 0)}">
       <img src="${escapeHtml(src)}" alt="${escapeHtml(item.model)}" loading="lazy" />
     </div>
   `;
@@ -1988,7 +1989,7 @@ function statusClass(status) {
 }
 
 function showPreview(event) {
-  const target = event.target.closest(".preview-target");
+  const target = event.target.closest(".image-preview-target");
   if (!target) return;
 
   els.preview.innerHTML = `
@@ -2001,13 +2002,16 @@ function showPreview(event) {
 
 function movePreview(event) {
   if (!els.preview.classList.contains("visible")) return;
-  const x = Math.min(event.clientX + 18, window.innerWidth - 330);
-  const y = Math.min(event.clientY + 18, window.innerHeight - 310);
-  els.preview.style.transform = `translate(${Math.max(12, x)}px, ${Math.max(12, y)}px)`;
+  const width = els.preview.offsetWidth || Math.min(620, window.innerWidth * .34);
+  const height = els.preview.offsetHeight || 440;
+  const x = event.clientX + 24 + width > window.innerWidth ? event.clientX - width - 24 : event.clientX + 24;
+  const y = Math.min(Math.max(14, event.clientY - height * .3), window.innerHeight - height - 14);
+  els.preview.style.transform = `translate(${Math.max(14, x)}px, ${Math.max(14, y)}px)`;
 }
 
 function hidePreview(event) {
-  if (!event.target.closest(".preview-target")) return;
+  const target = event.target.closest(".image-preview-target");
+  if (!target || (event.relatedTarget && target.contains(event.relatedTarget))) return;
   els.preview.classList.remove("visible");
 }
 

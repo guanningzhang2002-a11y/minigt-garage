@@ -1038,14 +1038,17 @@ tbody tr:hover {
 }
 
 .row-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 62px);
   gap: 7px;
-  flex-wrap: wrap;
-  min-width: 112px;
+  width: 131px;
+  min-width: 131px;
 }
 
 .row-actions button,
 .row-actions a {
+  width: 62px;
+  height: 34px;
   min-height: 32px;
   display: inline-flex;
   align-items: center;
@@ -1312,20 +1315,32 @@ tbody tr:hover {
   text-decoration: none;
 }
 
-.wishlist-card-actions .price-check-link {
+.wishlist-card .wishlist-card-actions .price-check-link {
   width: 32px;
   min-width: 32px;
   min-height: 32px;
   height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 0;
   border: 1px solid #efb3b7;
   border-radius: 50%;
   background: #fff7f7;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 0;
   font-weight: 800;
+  line-height: 1;
   text-decoration: none;
+}
+
+.wishlist-card .wishlist-card-actions .price-check-link::before {
+  content: "查";
+  display: block;
+  font-size: 13px;
+  line-height: 1;
+  transform: translateY(-.5px);
 }
 
 .wishlist-card-actions .price-check-link:hover {
@@ -1555,7 +1570,8 @@ tbody tr:hover {
   top: 0;
   left: 0;
   z-index: 40;
-  width: 310px;
+  width: clamp(420px, 34vw, 620px);
+  max-width: calc(100vw - 28px);
   pointer-events: none;
   opacity: 0;
   transform: translate(-999px, -999px);
@@ -1565,7 +1581,7 @@ tbody tr:hover {
   background: rgba(16, 24, 32, 0.94);
   box-shadow: 0 24px 52px rgba(0, 0, 0, 0.28);
   color: #fff;
-  padding: 10px;
+  padding: 12px;
 }
 
 .hover-preview.visible {
@@ -1574,9 +1590,10 @@ tbody tr:hover {
 
 .hover-preview img {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
   border-radius: 6px;
+  background: #fff;
   display: block;
   margin-bottom: 9px;
 }
@@ -1585,6 +1602,10 @@ tbody tr:hover {
 .hover-preview span {
   display: block;
   line-height: 1.3;
+}
+
+.hover-preview strong {
+  font-size: 16px;
 }
 
 .hover-preview span {
@@ -1867,6 +1888,7 @@ tbody tr:hover {
   }
 
   .row-actions > * {
+    width: 100%;
     min-width: 0;
     text-align: center;
   }
@@ -2150,10 +2172,14 @@ tbody tr:hover {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    width: 100%;
     min-width: 0;
   }
 
-  .row-actions button {
+  .row-actions button,
+  .row-actions a {
+    width: 100%;
+    height: 38px;
     min-height: 38px;
     font-size: 13px;
   }
