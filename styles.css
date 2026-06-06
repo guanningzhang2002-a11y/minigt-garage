@@ -1569,7 +1569,7 @@ tbody tr:hover {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 40;
+  z-index: 200;
   width: clamp(420px, 34vw, 620px);
   max-width: calc(100vw - 28px);
   pointer-events: none;
