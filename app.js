@@ -269,6 +269,9 @@ function normalizeItem(item) {
   const number = String(item.number || "").replace(/\D/g, "");
   const catalogItem = getCatalogItem(number);
   const migrated = migrateStatusAndNote(item.status || "", item.note || "");
+  const catalogImageUrl = catalogItem?.imageUrl || knownImageUrls[number] || "";
+  const selectedImageUrl = item.selectedImageUrl
+    || (item.imageUrl && catalogImageUrl && item.imageUrl !== catalogImageUrl ? item.imageUrl : "");
   const normalized = {
     id: Number(item.id) || Date.now(),
     status: migrated.status,
@@ -280,6 +283,7 @@ function normalizeItem(item) {
     targetPrice: item.targetPrice || "",
     priority: item.priority || "普通",
     imageUrl: item.imageUrl || "",
+    selectedImageUrl,
     productUrl: item.productUrl || "",
     note: migrated.note,
     packageType: item.packageType || inferPackageType(migrated.note),
@@ -767,6 +771,7 @@ function inventoryHash(items) {
     packageType: item.packageType || "盒装",
     note: item.note || "",
     imageUrl: item.imageUrl || "",
+    selectedImageUrl: item.selectedImageUrl || "",
     productUrl: item.productUrl || "",
     targetPrice: item.targetPrice || "",
     priority: item.priority || "普通"
@@ -1366,7 +1371,7 @@ function saveEdit(event) {
   const baseItem = normalizeItem({
     ...item,
     status: selectedStatus,
-    imageUrl: selectedImage || item.imageUrl,
+    selectedImageUrl: selectedImage || item.selectedImageUrl || "",
     priority: document.querySelector("#editPriority").value,
     targetPrice: document.querySelector("#editTargetPrice").value.trim()
   });
@@ -1377,7 +1382,7 @@ function saveEdit(event) {
     packageType: row.packageType,
     quantity: row.quantity,
     note: row.note,
-    imageUrl: selectedImage || item.imageUrl
+    selectedImageUrl: selectedImage || item.selectedImageUrl || ""
   }));
 
   if (!rebuilt.length) {
@@ -1437,7 +1442,7 @@ function renderImagePicker(item) {
 function lockImageForNumber(number, imageUrl) {
   if (!number || !imageUrl) return;
   inventory.forEach((entry) => {
-    if (entry.number === number) entry.imageUrl = imageUrl;
+    if (entry.number === number) entry.selectedImageUrl = imageUrl;
   });
   persist();
 }
@@ -1953,7 +1958,7 @@ function imageMarkup(item, mode) {
 }
 
 function carImage(item) {
-  return item.imageUrl || generatedCarImage(item);
+  return item.selectedImageUrl || item.imageUrl || generatedCarImage(item);
 }
 
 function generatedCarImage(item) {
