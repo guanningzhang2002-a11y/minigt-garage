@@ -116,8 +116,8 @@ const storageKey = "minigt-inventory-v1";
 const syncStorageKey = "minigt-sync-v1";
 const syncDirtyKey = "minigt-sync-dirty-v1";
 const localChangedAtKey = "minigt-local-changed-at-v1";
-const lastCloudHashKey = "minigt-last-cloud-hash-v1";
-const lastCloudUpdatedAtKey = "minigt-last-cloud-updated-at-v1";
+const lastCloudRevisionKey = "minigt-last-cloud-revision-v1";
+const cloudBaseDataKey = "minigt-cloud-base-data-v1";
 const localBackupKey = "minigt-inventory-backup-v1";
 const syncTable = "minigt_collections";
 let inventory = loadInventory();
@@ -127,8 +127,7 @@ let syncPollTimer = null;
 let syncRetryTimer = null;
 let syncBusy = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
-let lastKnownCloudHash = localStorage.getItem(lastCloudHashKey) || "";
-let lastCloudUpdatedAt = localStorage.getItem(lastCloudUpdatedAtKey) || "";
+let lastCloudRevision = Number(localStorage.getItem(lastCloudRevisionKey) || 0);
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 let activeCategory = { type: "all", value: "all", label: "全部收藏" };
 let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
@@ -431,7 +430,7 @@ function injectSyncUi() {
           </div>
           <div class="sync-copy sync-connected" id="syncConnected">
             <strong>云同步已连接</strong>
-            <p>新增、编辑或删除后会自动上传；手机和电脑会定时检查云端更新。也可以使用下面的按钮手动同步。</p>
+            <p>新增、编辑、删除或更换图片后会自动上传。云端版本号会阻止旧设备覆盖新数据；同时修改时会自动合并。</p>
             <p class="sync-space" id="syncSpace"></p>
             <button class="secondary mini" id="editSyncSettingsBtn" type="button">修改连接</button>
           </div>
@@ -460,7 +459,7 @@ function injectSyncUi() {
             <button class="secondary" id="pushSyncBtn" type="button">上传到云端</button>
             <button class="danger" id="clearSyncBtn" type="button">关闭同步</button>
           </div>
-          <p class="sync-help">第一次使用前，把项目里的 supabase-setup.sql 复制到 Supabase SQL Editor 运行一次。</p>
+          <p class="sync-help">首次使用或同步功能升级后，把项目里的 supabase-setup.sql 复制到 Supabase SQL Editor 运行一次。</p>
         </div>
       </div>
     `);
@@ -669,12 +668,11 @@ function saveSyncConfigFromForm() {
 function clearSyncSettings() {
   localStorage.removeItem(syncStorageKey);
   localStorage.removeItem(syncDirtyKey);
-  localStorage.removeItem(lastCloudHashKey);
-  localStorage.removeItem(lastCloudUpdatedAtKey);
+  localStorage.removeItem(lastCloudRevisionKey);
+  localStorage.removeItem(cloudBaseDataKey);
   syncConfig = { url: "", key: "", owner: "" };
   hasUnsyncedLocalChanges = false;
-  lastKnownCloudHash = "";
-  lastCloudUpdatedAt = "";
+  lastCloudRevision = 0;
   stopAutoSync();
   updateSyncStatus();
   updateSyncModalState();
@@ -708,7 +706,7 @@ function updateSyncModalState() {
   if (!modal) return;
   modal.classList.toggle("configured", isSyncReady());
   const space = document.querySelector("#syncSpace");
-  if (space) space.textContent = isSyncReady() ? `同步空间：${syncSpaceLabel()}` : "";
+  if (space) space.textContent = isSyncReady() ? `同步空间：${syncSpaceLabel()} · 云端版本 ${lastCloudRevision || "未读取"}` : "";
 }
 
 function isSyncReady() {
@@ -748,14 +746,20 @@ function scheduleCloudPush() {
 async function refreshFromCloud() {
   if (!isSyncReady() || hasUnsyncedLocalChanges || syncBusy) return;
   try {
-    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=updated_at`), {
+    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=revision,updated_at`), {
       headers: syncHeaders(),
       cache: "no-store"
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      if (String(error.message || "").includes("revision")) {
+        setSyncMessage("云同步需要升级，请重新运行最新版 SQL");
+      }
+      return;
+    }
     const rows = await response.json();
-    const updatedAt = rows[0]?.updated_at || "";
-    if (!updatedAt || updatedAt === lastCloudUpdatedAt) return;
+    const revision = Number(rows[0]?.revision || 0);
+    if (!revision || revision <= lastCloudRevision) return;
     await pullFromCloud({ silent: true });
   } catch {
     // Background checks stay silent; manual sync still reports errors.
@@ -814,13 +818,25 @@ function effectiveSelectedImageUrl(item) {
   return item?.imageUrl && catalogImageUrl && item.imageUrl !== catalogImageUrl ? item.imageUrl : "";
 }
 
-function rememberCloudHash(items) {
-  lastKnownCloudHash = inventoryHash(items);
-  localStorage.setItem(lastCloudHashKey, lastKnownCloudHash);
+function rememberCloudState(row) {
+  const cloudData = Array.isArray(row?.data) ? row.data : [];
+  lastCloudRevision = Number(row?.revision || 0);
+  localStorage.setItem(lastCloudRevisionKey, String(lastCloudRevision));
+  localStorage.setItem(cloudBaseDataKey, JSON.stringify(cloudData));
+  updateSyncModalState();
+}
+
+function loadCloudBaseData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(cloudBaseDataKey) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 async function fetchCloudRow() {
-  const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at`), {
+  const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
     headers: syncHeaders(),
     cache: "no-store"
   });
@@ -829,7 +845,75 @@ async function fetchCloudRow() {
   return rows[0] || null;
 }
 
-async function pushToCloud({ silent = true, automatic = false } = {}) {
+function recordKey(item, index) {
+  return item?.id ? `id:${item.id}` : `fallback:${item?.number || ""}:${item?.packageType || "盒装"}:${index}`;
+}
+
+function recordFingerprint(item) {
+  return item ? inventoryHash([item]) : "";
+}
+
+function mergeCloudAndLocal(baseItems, localItems, cloudItems) {
+  const toMap = (items) => new Map((items || []).map((item, index) => [recordKey(item, index), item]));
+  const base = toMap(baseItems);
+  const local = toMap(localItems);
+  const cloud = toMap(cloudItems);
+  const keys = new Set([...base.keys(), ...local.keys(), ...cloud.keys()]);
+  const merged = [];
+
+  keys.forEach((key) => {
+    const baseItem = base.get(key);
+    const localItem = local.get(key);
+    const cloudItem = cloud.get(key);
+    const localChanged = recordFingerprint(localItem) !== recordFingerprint(baseItem);
+    const cloudChanged = recordFingerprint(cloudItem) !== recordFingerprint(baseItem);
+
+    if (localChanged && !cloudChanged) {
+      if (localItem) merged.push(localItem);
+      return;
+    }
+    if (cloudChanged && !localChanged) {
+      if (cloudItem) merged.push(cloudItem);
+      return;
+    }
+    if (localChanged && cloudChanged) {
+      if (recordFingerprint(localItem) === recordFingerprint(cloudItem)) {
+        if (localItem) merged.push(localItem);
+      } else if (localItem) {
+        merged.push(localItem);
+      }
+      return;
+    }
+    if (cloudItem || localItem || baseItem) merged.push(cloudItem || localItem || baseItem);
+  });
+
+  return merged.map(normalizeItem);
+}
+
+async function saveCloudRevision(expectedRevision, data) {
+  const response = await fetch(`${syncConfig.url}/rest/v1/rpc/save_minigt_collection`, {
+    method: "POST",
+    headers: syncHeaders(),
+    body: JSON.stringify({
+      p_owner_key: ownerKey(),
+      p_expected_revision: expectedRevision,
+      p_data: data
+    })
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const setupRequired = body?.code === "PGRST202"
+      || String(body?.message || "").includes("save_minigt_collection");
+    const error = new Error(setupRequired
+      ? "云同步需要升级：请在 Supabase SQL Editor 重新运行最新版 supabase-setup.sql"
+      : body?.message || body?.hint || "云端保存失败");
+    error.syncConflict = body?.code === "40001" || String(body?.message || "").includes("sync_conflict");
+    throw error;
+  }
+  return Array.isArray(body) ? body[0] : body;
+}
+
+async function pushToCloud({ silent = true, automatic = false, attempt = 0 } = {}) {
   if (!isSyncReady()) {
     openSyncModal();
     setSyncMessage("请先完成云同步设置");
@@ -857,32 +941,16 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
   const uploadSnapshot = structuredClone(inventory);
   const uploadHash = inventoryHash(uploadSnapshot);
   try {
-    if (automatic) {
-      const cloudRow = await fetchCloudRow();
-      const cloudHash = inventoryHash(cloudRow?.data || []);
-      if (cloudRow && cloudHash !== uploadHash && (!lastKnownCloudHash || cloudHash !== lastKnownCloudHash)) {
-        setSyncMessage("发现另一台设备的新改动，请先从云端下载");
-        showSaveToast("检测到同步冲突，未覆盖云端数据", "error");
-        return;
-      }
-    }
-    const response = await fetch(syncEndpoint("?on_conflict=owner_key&select=data,updated_at"), {
-      method: "POST",
-      headers: syncHeaders({ Prefer: "resolution=merge-duplicates,return=representation" }),
-      body: JSON.stringify({
-        owner_key: ownerKey(),
-        data: uploadSnapshot
-      })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    const returnedRows = await response.json().catch(() => []);
-    const verifiedRow = returnedRows[0] || await fetchCloudRow();
+    const saved = await saveCloudRevision(lastCloudRevision, uploadSnapshot);
+    const verifiedRow = saved ? {
+      data: saved.data,
+      updated_at: saved.updated_at,
+      revision: saved.revision
+    } : await fetchCloudRow();
     if (!verifiedRow || inventoryHash(verifiedRow.data) !== uploadHash) {
       throw new Error("云端返回的数据与本地不一致，请重新上传");
     }
-    rememberCloudHash(verifiedRow.data);
-    lastCloudUpdatedAt = verifiedRow.updated_at || "";
-    localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
+    rememberCloudState(verifiedRow);
     if (inventoryHash(inventory) === uploadHash) {
       clearLocalDirty();
       lastLocalChangeAt = Date.parse(verifiedRow.updated_at) || Date.now();
@@ -890,10 +958,24 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
     } else {
       markLocalDirty();
     }
-    setSyncMessage(`已验证上传 ${uploadSnapshot.length} 条 · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    setSyncMessage(`已上传 ${uploadSnapshot.length} 条 · 云端版本 ${lastCloudRevision}`);
     showSaveToast("云端已更新并完成核对", "synced");
     if (!silent) closeSyncModal();
   } catch (error) {
+    if (error.syncConflict && attempt < 2) {
+      const cloudRow = await fetchCloudRow().catch(() => null);
+      if (cloudRow) {
+        inventory = mergeCloudAndLocal(loadCloudBaseData(), uploadSnapshot, cloudRow.data || []);
+        rememberCloudState(cloudRow);
+        saveLocalOnly();
+        markLocalDirty();
+        render();
+        syncBusy = false;
+        setSyncMessage("已合并另一台设备的改动，正在重新上传...");
+        showSaveToast("发现新版本，已合并后重新上传", "synced");
+        return pushToCloud({ silent, automatic, attempt: attempt + 1 });
+      }
+    }
     markLocalDirty();
     setSyncMessage("上传未验证，本地改动已保留");
     showSaveToast("上传失败，本地数据仍然保留", "error");
@@ -937,7 +1019,7 @@ async function pullFromCloud({ silent } = { silent: true }) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at`), {
+    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
       headers: syncHeaders(),
       signal: controller.signal,
       cache: "no-store"
@@ -952,24 +1034,20 @@ async function pullFromCloud({ silent } = { silent: true }) {
     const cloudData = Array.isArray(rows[0].data) ? rows[0].data : [];
     const cloudUpdatedAt = Date.parse(rows[0].updated_at) || 0;
     if (inventoryHash(cloudData) === inventoryHash(inventory)) {
-      rememberCloudHash(cloudData);
-      lastCloudUpdatedAt = rows[0].updated_at || "";
-      localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
+      rememberCloudState(rows[0]);
       clearLocalDirty();
-      setSyncMessage(`自动同步已连接 · ${syncSpaceLabel()}`);
+      setSyncMessage(`自动同步已连接 · 云端版本 ${lastCloudRevision}`);
       return;
     }
     saveLocalBackup();
     inventory = cloudData.map(normalizeItem);
-    rememberCloudHash(cloudData);
-    lastCloudUpdatedAt = rows[0].updated_at || "";
-    localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
+    rememberCloudState(rows[0]);
     saveLocalOnly();
     clearLocalDirty();
     lastLocalChangeAt = cloudUpdatedAt;
     localStorage.setItem(localChangedAtKey, String(lastLocalChangeAt));
     render();
-    setSyncMessage(`已下载 ${inventory.length} 条 · ${new Date(rows[0].updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`);
+    setSyncMessage(`已下载 ${inventory.length} 条 · 云端版本 ${lastCloudRevision}`);
     if (!silent) closeSyncModal();
   } catch (error) {
     if (!silent) setSyncMessage(error.name === "AbortError" ? "云端读取超时，稍后会重试" : "读取失败，请检查 Supabase 设置");
@@ -989,7 +1067,7 @@ function updateSyncStatus() {
     setSyncMessage("本机数据");
     return;
   }
-  setSyncMessage(hasUnsyncedLocalChanges ? "本地有改动，正在等待自动上传" : `自动同步已连接 · ${syncSpaceLabel()}`);
+  setSyncMessage(hasUnsyncedLocalChanges ? "本地有改动，正在等待自动上传" : `自动同步已连接 · 版本 ${lastCloudRevision || "未读取"}`);
 }
 
 function setSyncMessage(message) {
