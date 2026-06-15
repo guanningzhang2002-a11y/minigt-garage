@@ -1,4 +1,4 @@
-const cacheName = "minigt-tracker-v49";
+const cacheName = "minigt-tracker-v50";
 const appShell = [
   "./",
   "./index.html",
@@ -15,6 +15,12 @@ const appShell = [
   "./assets/minigt-catalog.js",
   "./assets/minigt-image-candidates.js"
 ];
+
+function rememberResponse(request, response) {
+  if (!response.ok) return;
+  const copy = response.clone();
+  caches.open(cacheName).then((cache) => cache.put(request, copy));
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(appShell)));
@@ -46,8 +52,7 @@ self.addEventListener("fetch", (event) => {
   if (freshFirst) {
     event.respondWith(
       fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(cacheName).then((cache) => cache.put(event.request, copy));
+        rememberResponse(event.request, response);
         return response;
       }).catch(() => caches.match(event.request))
     );
@@ -57,8 +62,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) =>
       cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(cacheName).then((cache) => cache.put(event.request, copy));
+        rememberResponse(event.request, response);
         return response;
       })
     )

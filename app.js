@@ -117,6 +117,7 @@ const syncStorageKey = "minigt-sync-v1";
 const syncDirtyKey = "minigt-sync-dirty-v1";
 const localChangedAtKey = "minigt-local-changed-at-v1";
 const lastCloudHashKey = "minigt-last-cloud-hash-v1";
+const lastCloudUpdatedAtKey = "minigt-last-cloud-updated-at-v1";
 const localBackupKey = "minigt-inventory-backup-v1";
 const syncTable = "minigt_collections";
 let inventory = loadInventory();
@@ -127,6 +128,7 @@ let syncRetryTimer = null;
 let syncBusy = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
 let lastKnownCloudHash = localStorage.getItem(lastCloudHashKey) || "";
+let lastCloudUpdatedAt = localStorage.getItem(lastCloudUpdatedAtKey) || "";
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 let activeCategory = { type: "all", value: "all", label: "全部收藏" };
 let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
@@ -151,7 +153,6 @@ const els = {
   statusFilter: document.querySelector("#statusFilter"),
   viewSelect: document.querySelector("#viewSelect"),
   sort: document.querySelector("#sortSelect"),
-  statusSummary: document.querySelector("#statusSummary"),
   categoryList: document.querySelector("#categoryList"),
   activeCategoryLabel: document.querySelector("#activeCategoryLabel"),
   quickMatch: document.querySelector("#quickMatch"),
@@ -228,7 +229,7 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) refreshFromCloud();
 });
 saveLocalOnly();
-saveLocalBackup();
+initializeLocalBackup();
 renderQuickMatch();
 render();
 updateSyncStatus();
@@ -348,8 +349,8 @@ function inferPackageType(note) {
 function persist() {
   lastLocalChangeAt = Date.now();
   markLocalDirty();
+  backupCurrentLocalState();
   saveLocalOnly();
-  saveLocalBackup();
   updateSyncStatus();
   showSaveToast("本地已保存，尚未上传云端", "dirty");
   scheduleCloudPush();
@@ -361,6 +362,15 @@ function saveLocalOnly() {
 
 function saveLocalBackup(items = inventory) {
   localStorage.setItem(localBackupKey, JSON.stringify(items));
+}
+
+function initializeLocalBackup() {
+  if (!localStorage.getItem(localBackupKey)) saveLocalBackup();
+}
+
+function backupCurrentLocalState() {
+  const current = localStorage.getItem(storageKey);
+  if (current) localStorage.setItem(localBackupKey, current);
 }
 
 function markLocalDirty() {
@@ -660,9 +670,11 @@ function clearSyncSettings() {
   localStorage.removeItem(syncStorageKey);
   localStorage.removeItem(syncDirtyKey);
   localStorage.removeItem(lastCloudHashKey);
+  localStorage.removeItem(lastCloudUpdatedAtKey);
   syncConfig = { url: "", key: "", owner: "" };
   hasUnsyncedLocalChanges = false;
   lastKnownCloudHash = "";
+  lastCloudUpdatedAt = "";
   stopAutoSync();
   updateSyncStatus();
   updateSyncModalState();
@@ -733,9 +745,21 @@ function scheduleCloudPush() {
   syncTimer = window.setTimeout(() => pushToCloud({ silent: true, automatic: true }), 1800);
 }
 
-function refreshFromCloud() {
+async function refreshFromCloud() {
   if (!isSyncReady() || hasUnsyncedLocalChanges || syncBusy) return;
-  pullFromCloud({ silent: true });
+  try {
+    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=updated_at`), {
+      headers: syncHeaders(),
+      cache: "no-store"
+    });
+    if (!response.ok) return;
+    const rows = await response.json();
+    const updatedAt = rows[0]?.updated_at || "";
+    if (!updatedAt || updatedAt === lastCloudUpdatedAt) return;
+    await pullFromCloud({ silent: true });
+  } catch {
+    // Background checks stay silent; manual sync still reports errors.
+  }
 }
 
 function syncSpaceLabel() {
@@ -811,7 +835,15 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
     setSyncMessage("请先完成云同步设置");
     return;
   }
+  if (automatic && !hasUnsyncedLocalChanges) return;
+  if (!automatic) {
+    window.clearTimeout(syncTimer);
+    syncTimer = null;
+  }
   if (syncBusy) {
+    window.clearTimeout(syncRetryTimer);
+    syncRetryTimer = window.setTimeout(() => pushToCloud({ silent, automatic }), 600);
+    if (!silent) setSyncMessage("同步正在进行，上传已排队...");
     return;
   }
   const pushButtons = [document.querySelector("#pushSyncBtn"), document.querySelector("#quickPushBtn")].filter(Boolean);
@@ -849,11 +881,12 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
       throw new Error("云端返回的数据与本地不一致，请重新上传");
     }
     rememberCloudHash(verifiedRow.data);
+    lastCloudUpdatedAt = verifiedRow.updated_at || "";
+    localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
     if (inventoryHash(inventory) === uploadHash) {
       clearLocalDirty();
       lastLocalChangeAt = Date.parse(verifiedRow.updated_at) || Date.now();
       localStorage.setItem(localChangedAtKey, String(lastLocalChangeAt));
-      saveLocalBackup(uploadSnapshot);
     } else {
       markLocalDirty();
     }
@@ -862,7 +895,6 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
     if (!silent) closeSyncModal();
   } catch (error) {
     markLocalDirty();
-    saveLocalBackup();
     setSyncMessage("上传未验证，本地改动已保留");
     showSaveToast("上传失败，本地数据仍然保留", "error");
     if (automatic && isSyncReady()) {
@@ -880,7 +912,15 @@ async function pushToCloud({ silent = true, automatic = false } = {}) {
 }
 
 async function pullFromCloud({ silent } = { silent: true }) {
-  if (!isSyncReady() || syncBusy) return;
+  if (!isSyncReady()) return;
+  if (syncBusy) {
+    if (!silent) {
+      window.clearTimeout(syncRetryTimer);
+      syncRetryTimer = window.setTimeout(() => pullFromCloud({ silent: false }), 600);
+      setSyncMessage("同步正在进行，下载已排队...");
+    }
+    return;
+  }
   if (hasUnsyncedLocalChanges) {
     if (silent) return;
     const confirmed = confirm("当前本地有未上传改动。从云端下载会用云端数据覆盖本地，确定继续吗？");
@@ -913,6 +953,8 @@ async function pullFromCloud({ silent } = { silent: true }) {
     const cloudUpdatedAt = Date.parse(rows[0].updated_at) || 0;
     if (inventoryHash(cloudData) === inventoryHash(inventory)) {
       rememberCloudHash(cloudData);
+      lastCloudUpdatedAt = rows[0].updated_at || "";
+      localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
       clearLocalDirty();
       setSyncMessage(`自动同步已连接 · ${syncSpaceLabel()}`);
       return;
@@ -920,6 +962,8 @@ async function pullFromCloud({ silent } = { silent: true }) {
     saveLocalBackup();
     inventory = cloudData.map(normalizeItem);
     rememberCloudHash(cloudData);
+    lastCloudUpdatedAt = rows[0].updated_at || "";
+    localStorage.setItem(lastCloudUpdatedAtKey, lastCloudUpdatedAt);
     saveLocalOnly();
     clearLocalDirty();
     lastLocalChangeAt = cloudUpdatedAt;
@@ -1579,10 +1623,6 @@ function setPackageType(packageType) {
   if (input) input.checked = true;
 }
 
-function getEditPackageType() {
-  return document.querySelector("input[name='editPackageType']:checked")?.value || "盒装";
-}
-
 function setEditPackageType(packageType) {
   const value = packageType === "挂卡" ? "挂卡" : "盒装";
   const input = document.querySelector(`input[name='editPackageType'][value='${value}']`);
@@ -1626,6 +1666,7 @@ function renderQuickMatch() {
 }
 
 function restoreSeed() {
+  if (!confirm("确定恢复初始数据吗？当前收藏会被替换，并可从本地备份中恢复一次。")) return;
   inventory = structuredClone(seedInventory);
   persist();
   resetForm();
@@ -1838,16 +1879,6 @@ function themeCategoryDefinitions() {
   { value: "ao-racing", label: "AO Racing", keywords: ["AO Racing"] },
   { value: "limited", label: "Limited Edition", keywords: ["Limited Edition"] }
   ];
-}
-
-function renderStatusSummary() {
-  if (!els.statusSummary) return;
-  const counts = new Map();
-  inventory.forEach((item) => counts.set(item.status, (counts.get(item.status) || 0) + Number(item.quantity || 0)));
-  els.statusSummary.innerHTML = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([status, count]) => `<span class="summary-pill">${escapeHtml(status || "未分类")} · ${count}</span>`)
-    .join("");
 }
 
 function renderInventory(items) {
@@ -2087,7 +2118,7 @@ function hidePreview(event) {
 
 function exportCsv() {
   const header = ["状态", "编号", "车型", "包装", "数量", "购买价", "小车照片URL", "产品页URL", "额外备注"];
-  const rows = inventory.map((item) => [item.status, item.number, item.model, item.packageType || "盒装", item.quantity, item.price || "", item.imageUrl || "", item.productUrl || "", item.note || ""]);
+  const rows = inventory.map((item) => [item.status, item.number, item.model, item.packageType || "盒装", item.quantity, item.price || "", carImage(item), item.productUrl || "", item.note || ""]);
   const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
   const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
