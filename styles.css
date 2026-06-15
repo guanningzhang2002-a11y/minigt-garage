@@ -1384,6 +1384,20 @@ tbody tr:hover {
   margin-bottom: 6px;
 }
 
+.sync-space {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 !important;
+  padding: 5px 8px;
+  border: 1px solid #d8e0e9;
+  border-radius: 5px;
+  background: #fff;
+  color: #9c2028 !important;
+  font-family: Consolas, monospace;
+  font-size: 12px !important;
+  font-weight: 700;
+}
+
 .sync-dialog.configured .sync-connected {
   display: grid;
   gap: 8px;

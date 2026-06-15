@@ -116,13 +116,17 @@ const storageKey = "minigt-inventory-v1";
 const syncStorageKey = "minigt-sync-v1";
 const syncDirtyKey = "minigt-sync-dirty-v1";
 const localChangedAtKey = "minigt-local-changed-at-v1";
+const lastCloudHashKey = "minigt-last-cloud-hash-v1";
 const localBackupKey = "minigt-inventory-backup-v1";
 const syncTable = "minigt_collections";
 let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
 let syncTimer = null;
+let syncPollTimer = null;
+let syncRetryTimer = null;
 let syncBusy = false;
 let lastLocalChangeAt = Number(localStorage.getItem(localChangedAtKey) || 0);
+let lastKnownCloudHash = localStorage.getItem(lastCloudHashKey) || "";
 let hasUnsyncedLocalChanges = localStorage.getItem(syncDirtyKey) === "true";
 let activeCategory = { type: "all", value: "all", label: "全部收藏" };
 let activeWishlistCategory = { type: "all", value: "all", label: "全部" };
@@ -219,6 +223,10 @@ document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
 document.querySelector("#backToTopBtn")?.addEventListener("click", scrollToTop);
 window.addEventListener("scroll", toggleBackToTop, { passive: true });
+window.addEventListener("focus", refreshFromCloud);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshFromCloud();
+});
 saveLocalOnly();
 saveLocalBackup();
 renderQuickMatch();
@@ -229,6 +237,7 @@ initHeroCarousel();
 if (isSyncReady() && !hasUnsyncedLocalChanges) {
   pullFromCloud({ silent: true });
 }
+startAutoSync();
 registerServiceWorker();
 
 function loadInventory() {
@@ -341,6 +350,7 @@ function persist() {
   saveLocalBackup();
   updateSyncStatus();
   showSaveToast("本地已保存，尚未上传云端", "dirty");
+  scheduleCloudPush();
 }
 
 function saveLocalOnly() {
@@ -409,7 +419,8 @@ function injectSyncUi() {
           </div>
           <div class="sync-copy sync-connected" id="syncConnected">
             <strong>云同步已连接</strong>
-            <p>新增、编辑或删除后，请点击“上传到云端”。上传完成后系统会核对云端内容，刷新时只会读取已经验证的数据。</p>
+            <p>新增、编辑或删除后会自动上传；手机和电脑会定时检查云端更新。也可以使用下面的按钮手动同步。</p>
+            <p class="sync-space" id="syncSpace"></p>
             <button class="secondary mini" id="editSyncSettingsBtn" type="button">修改连接</button>
           </div>
           <form id="syncForm" class="sync-form">
@@ -639,14 +650,18 @@ function saveSyncConfigFromForm() {
   localStorage.setItem(syncStorageKey, JSON.stringify(syncConfig));
   updateSyncStatus();
   updateSyncModalState();
+  startAutoSync();
   return true;
 }
 
 function clearSyncSettings() {
   localStorage.removeItem(syncStorageKey);
   localStorage.removeItem(syncDirtyKey);
+  localStorage.removeItem(lastCloudHashKey);
   syncConfig = { url: "", key: "", owner: "" };
   hasUnsyncedLocalChanges = false;
+  lastKnownCloudHash = "";
+  stopAutoSync();
   updateSyncStatus();
   updateSyncModalState();
   closeSyncModal();
@@ -678,6 +693,8 @@ function updateSyncModalState() {
   const modal = document.querySelector("#syncModal");
   if (!modal) return;
   modal.classList.toggle("configured", isSyncReady());
+  const space = document.querySelector("#syncSpace");
+  if (space) space.textContent = isSyncReady() ? `同步空间：${syncSpaceLabel()}` : "";
 }
 
 function isSyncReady() {
@@ -709,10 +726,35 @@ function ownerKey() {
 
 function scheduleCloudPush() {
   updateSyncStatus();
+  if (!isSyncReady()) return;
+  window.clearTimeout(syncTimer);
+  syncTimer = window.setTimeout(() => pushToCloud({ silent: true, automatic: true }), 1800);
 }
 
 function refreshFromCloud() {
-  return;
+  if (!isSyncReady() || hasUnsyncedLocalChanges || syncBusy) return;
+  pullFromCloud({ silent: true });
+}
+
+function syncSpaceLabel() {
+  const key = ownerKey();
+  return key.slice(-6).toUpperCase();
+}
+
+function startAutoSync() {
+  stopAutoSync();
+  if (!isSyncReady()) return;
+  if (hasUnsyncedLocalChanges) scheduleCloudPush();
+  syncPollTimer = window.setInterval(refreshFromCloud, 8000);
+}
+
+function stopAutoSync() {
+  window.clearTimeout(syncTimer);
+  window.clearTimeout(syncRetryTimer);
+  window.clearInterval(syncPollTimer);
+  syncTimer = null;
+  syncRetryTimer = null;
+  syncPollTimer = null;
 }
 
 function inventoryHash(items) {
@@ -735,6 +777,11 @@ function inventoryHash(items) {
   }));
 }
 
+function rememberCloudHash(items) {
+  lastKnownCloudHash = inventoryHash(items);
+  localStorage.setItem(lastCloudHashKey, lastKnownCloudHash);
+}
+
 async function fetchCloudRow() {
   const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at`), {
     headers: syncHeaders(),
@@ -745,7 +792,7 @@ async function fetchCloudRow() {
   return rows[0] || null;
 }
 
-async function pushToCloud({ silent } = { silent: true }) {
+async function pushToCloud({ silent = true, automatic = false } = {}) {
   if (!isSyncReady()) {
     openSyncModal();
     setSyncMessage("请先完成云同步设置");
@@ -765,6 +812,15 @@ async function pushToCloud({ silent } = { silent: true }) {
   const uploadSnapshot = structuredClone(inventory);
   const uploadHash = inventoryHash(uploadSnapshot);
   try {
+    if (automatic) {
+      const cloudRow = await fetchCloudRow();
+      const cloudHash = inventoryHash(cloudRow?.data || []);
+      if (cloudRow && cloudHash !== uploadHash && (!lastKnownCloudHash || cloudHash !== lastKnownCloudHash)) {
+        setSyncMessage("发现另一台设备的新改动，请先从云端下载");
+        showSaveToast("检测到同步冲突，未覆盖云端数据", "error");
+        return;
+      }
+    }
     const response = await fetch(syncEndpoint("?on_conflict=owner_key&select=data,updated_at"), {
       method: "POST",
       headers: syncHeaders({ Prefer: "resolution=merge-duplicates,return=representation" }),
@@ -779,6 +835,7 @@ async function pushToCloud({ silent } = { silent: true }) {
     if (!verifiedRow || inventoryHash(verifiedRow.data) !== uploadHash) {
       throw new Error("云端返回的数据与本地不一致，请重新上传");
     }
+    rememberCloudHash(verifiedRow.data);
     if (inventoryHash(inventory) === uploadHash) {
       clearLocalDirty();
       lastLocalChangeAt = Date.parse(verifiedRow.updated_at) || Date.now();
@@ -795,6 +852,10 @@ async function pushToCloud({ silent } = { silent: true }) {
     saveLocalBackup();
     setSyncMessage("上传未验证，本地改动已保留");
     showSaveToast("上传失败，本地数据仍然保留", "error");
+    if (automatic && isSyncReady()) {
+      window.clearTimeout(syncRetryTimer);
+      syncRetryTimer = window.setTimeout(() => pushToCloud({ silent: true, automatic: true }), 20000);
+    }
     if (!silent) alert(`同步失败：${error.message}`);
   } finally {
     syncBusy = false;
@@ -838,18 +899,14 @@ async function pullFromCloud({ silent } = { silent: true }) {
     const cloudData = Array.isArray(rows[0].data) ? rows[0].data : [];
     const cloudUpdatedAt = Date.parse(rows[0].updated_at) || 0;
     if (inventoryHash(cloudData) === inventoryHash(inventory)) {
+      rememberCloudHash(cloudData);
       clearLocalDirty();
-      if (!silent) setSyncMessage("云端暂无新变化");
-      return;
-    }
-    if (silent && lastLocalChangeAt > cloudUpdatedAt + 1000) {
-      markLocalDirty();
-      saveLocalBackup();
-      setSyncMessage("检测到本地数据更新，已阻止旧云端覆盖");
+      setSyncMessage(`自动同步已连接 · ${syncSpaceLabel()}`);
       return;
     }
     saveLocalBackup();
     inventory = cloudData.map(normalizeItem);
+    rememberCloudHash(cloudData);
     saveLocalOnly();
     clearLocalDirty();
     lastLocalChangeAt = cloudUpdatedAt;
@@ -875,7 +932,7 @@ function updateSyncStatus() {
     setSyncMessage("本机数据");
     return;
   }
-  setSyncMessage(hasUnsyncedLocalChanges ? "本地有改动，记得上传" : "云同步已连接");
+  setSyncMessage(hasUnsyncedLocalChanges ? "本地有改动，正在等待自动上传" : `自动同步已连接 · ${syncSpaceLabel()}`);
 }
 
 function setSyncMessage(message) {
