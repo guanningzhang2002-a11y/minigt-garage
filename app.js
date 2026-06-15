@@ -120,6 +120,7 @@ const lastCloudRevisionKey = "minigt-last-cloud-revision-v1";
 const cloudBaseDataKey = "minigt-cloud-base-data-v1";
 const localBackupKey = "minigt-inventory-backup-v1";
 const syncTable = "minigt_collections";
+const syncRequestTimeoutMs = 12000;
 let inventory = loadInventory();
 let syncConfig = loadSyncConfig();
 let syncTimer = null;
@@ -727,6 +728,24 @@ function syncEndpoint(query = "") {
   return `${syncConfig.url}/rest/v1/${syncTable}${query}`;
 }
 
+async function syncFetch(url, options = {}, timeoutMs = syncRequestTimeoutMs) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error(`云端请求超过 ${Math.round(timeoutMs / 1000)} 秒未响应`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 function ownerKey() {
   const bytes = new TextEncoder().encode(syncConfig.owner);
   let binary = "";
@@ -746,7 +765,7 @@ function scheduleCloudPush() {
 async function refreshFromCloud() {
   if (!isSyncReady() || hasUnsyncedLocalChanges || syncBusy) return;
   try {
-    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=revision,updated_at`), {
+    const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=revision,updated_at`), {
       headers: syncHeaders(),
       cache: "no-store"
     });
@@ -836,7 +855,7 @@ function loadCloudBaseData() {
 }
 
 async function fetchCloudRow() {
-  const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
+  const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
     headers: syncHeaders(),
     cache: "no-store"
   });
@@ -891,7 +910,7 @@ function mergeCloudAndLocal(baseItems, localItems, cloudItems) {
 }
 
 async function saveCloudRevision(expectedRevision, data) {
-  const response = await fetch(`${syncConfig.url}/rest/v1/rpc/save_minigt_collection`, {
+  const response = await syncFetch(`${syncConfig.url}/rest/v1/rpc/save_minigt_collection`, {
     method: "POST",
     headers: syncHeaders(),
     body: JSON.stringify({
@@ -977,7 +996,8 @@ async function pushToCloud({ silent = true, automatic = false, attempt = 0 } = {
       }
     }
     markLocalDirty();
-    setSyncMessage("上传未验证，本地改动已保留");
+    const timedOut = String(error.message || "").includes("秒未响应");
+    setSyncMessage(timedOut ? "上传超时，本地改动已保留" : "上传未验证，本地改动已保留");
     showSaveToast("上传失败，本地数据仍然保留", "error");
     if (automatic && isSyncReady()) {
       window.clearTimeout(syncRetryTimer);
@@ -1016,14 +1036,11 @@ async function pullFromCloud({ silent } = { silent: true }) {
   }
   syncBusy = true;
   if (!silent) setSyncMessage("正在读取云端...");
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
+    const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=data,updated_at,revision`), {
       headers: syncHeaders(),
-      signal: controller.signal,
       cache: "no-store"
-    });
+    }, 10000);
     if (!response.ok) throw new Error(await response.text());
     const rows = await response.json();
     if (!rows.length) {
@@ -1050,10 +1067,9 @@ async function pullFromCloud({ silent } = { silent: true }) {
     setSyncMessage(`已下载 ${inventory.length} 条 · 云端版本 ${lastCloudRevision}`);
     if (!silent) closeSyncModal();
   } catch (error) {
-    if (!silent) setSyncMessage(error.name === "AbortError" ? "云端读取超时，稍后会重试" : "读取失败，请检查 Supabase 设置");
+    if (!silent) setSyncMessage(String(error.message || "").includes("秒未响应") ? "云端读取超时，稍后会重试" : "读取失败，请检查 Supabase 设置");
     if (!silent) alert(`读取失败：${error.message}`);
   } finally {
-    window.clearTimeout(timeout);
     syncBusy = false;
     if (pullButton) {
       pullButton.disabled = false;

@@ -54,6 +54,7 @@ returns table(data jsonb, updated_at timestamptz, revision bigint)
 language plpgsql
 security invoker
 set search_path = public
+set statement_timeout = '10s'
 as $$
 begin
   if p_owner_key is distinct from (current_setting('request.headers', true)::json ->> 'x-owner-key') then
