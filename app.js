@@ -269,9 +269,7 @@ function normalizeItem(item) {
   const number = String(item.number || "").replace(/\D/g, "");
   const catalogItem = getCatalogItem(number);
   const migrated = migrateStatusAndNote(item.status || "", item.note || "");
-  const catalogImageUrl = catalogItem?.imageUrl || knownImageUrls[number] || "";
-  const selectedImageUrl = item.selectedImageUrl
-    || (item.imageUrl && catalogImageUrl && item.imageUrl !== catalogImageUrl ? item.imageUrl : "");
+  const selectedImageUrl = effectiveSelectedImageUrl(item);
   const normalized = {
     id: Number(item.id) || Date.now(),
     status: migrated.status,
@@ -762,24 +760,34 @@ function stopAutoSync() {
 }
 
 function inventoryHash(items) {
-  return JSON.stringify((items || []).map((item) => ({
-    id: Number(item.id) || 0,
-    status: item.status || "",
-    number: String(item.number || ""),
-    model: item.model || "",
-    quantity: Number(item.quantity || 0),
-    packageType: item.packageType || "盒装",
-    note: item.note || "",
-    imageUrl: item.imageUrl || "",
-    selectedImageUrl: item.selectedImageUrl || "",
-    productUrl: item.productUrl || "",
-    targetPrice: item.targetPrice || "",
-    priority: item.priority || "普通"
-  })).sort((a, b) => {
+  return JSON.stringify((items || []).map((item) => {
+    const normalized = normalizeItem({ ...item, id: Number(item.id) || -1 });
+    return {
+      id: Number(item.id) || 0,
+      status: normalized.status,
+      number: normalized.number,
+      model: normalized.model,
+      quantity: normalized.quantity,
+      packageType: normalized.packageType,
+      note: normalized.note,
+      imageUrl: normalized.imageUrl,
+      selectedImageUrl: normalized.selectedImageUrl,
+      productUrl: normalized.productUrl,
+      targetPrice: normalized.targetPrice,
+      priority: normalized.priority
+    };
+  }).sort((a, b) => {
     if (a.number !== b.number) return a.number.localeCompare(b.number);
     if (a.packageType !== b.packageType) return a.packageType.localeCompare(b.packageType);
     return a.id - b.id;
   }));
+}
+
+function effectiveSelectedImageUrl(item) {
+  if (item?.selectedImageUrl) return item.selectedImageUrl;
+  const number = String(item?.number || "").replace(/\D/g, "");
+  const catalogImageUrl = getCatalogItem(number)?.imageUrl || knownImageUrls[number] || "";
+  return item?.imageUrl && catalogImageUrl && item.imageUrl !== catalogImageUrl ? item.imageUrl : "";
 }
 
 function rememberCloudHash(items) {
