@@ -224,9 +224,9 @@ document.addEventListener("mouseover", showPreview);
 document.addEventListener("mouseout", hidePreview);
 document.querySelector("#backToTopBtn")?.addEventListener("click", scrollToTop);
 window.addEventListener("scroll", toggleBackToTop, { passive: true });
-window.addEventListener("focus", refreshFromCloud);
+window.addEventListener("focus", () => refreshFromCloud({ reason: "focus" }));
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) refreshFromCloud();
+  if (!document.hidden) refreshFromCloud({ reason: "visible" });
 });
 saveLocalOnly();
 initializeLocalBackup();
@@ -458,6 +458,7 @@ function injectSyncUi() {
             <button class="secondary" id="restoreLocalBackupBtn" type="button">恢复本地备份</button>
             <button class="secondary" id="pullSyncBtn" type="button">从云端下载</button>
             <button class="secondary" id="pushSyncBtn" type="button">上传到云端</button>
+            <button class="secondary" id="diagnoseSyncBtn" type="button">同步诊断</button>
             <button class="danger" id="clearSyncBtn" type="button">关闭同步</button>
           </div>
           <p class="sync-help">首次使用或同步功能升级后，把项目里的 supabase-setup.sql 复制到 Supabase SQL Editor 运行一次。</p>
@@ -484,6 +485,9 @@ function injectSyncUi() {
   });
   document.querySelector("#pushSyncBtn")?.addEventListener("click", () => {
     if (saveSyncConfigFromForm()) pushToCloud({ silent: false });
+  });
+  document.querySelector("#diagnoseSyncBtn")?.addEventListener("click", () => {
+    if (saveSyncConfigFromForm()) diagnoseSync();
   });
   document.querySelector("#clearSyncBtn")?.addEventListener("click", clearSyncSettings);
 }
@@ -728,6 +732,29 @@ function syncEndpoint(query = "") {
   return `${syncConfig.url}/rest/v1/${syncTable}${query}`;
 }
 
+async function readResponseDetails(response) {
+  const text = await response.text().catch(() => "");
+  if (!text) return { text: "", json: null };
+  try {
+    return { text, json: JSON.parse(text) };
+  } catch {
+    return { text, json: null };
+  }
+}
+
+function formatSyncError(prefix, response, details) {
+  const payload = details?.json || {};
+  return [
+    prefix,
+    `HTTP ${response.status}`,
+    payload.code ? `code: ${payload.code}` : "",
+    payload.message ? `message: ${payload.message}` : "",
+    payload.details ? `details: ${payload.details}` : "",
+    payload.hint ? `hint: ${payload.hint}` : "",
+    !payload.message && details?.text ? details.text.slice(0, 240) : ""
+  ].filter(Boolean).join("\n");
+}
+
 async function syncFetch(url, options = {}, timeoutMs = syncRequestTimeoutMs) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -762,7 +789,7 @@ function scheduleCloudPush() {
   syncTimer = window.setTimeout(() => pushToCloud({ silent: true, automatic: true }), 1800);
 }
 
-async function refreshFromCloud() {
+async function refreshFromCloud({ reason = "poll" } = {}) {
   if (!isSyncReady() || hasUnsyncedLocalChanges || syncBusy) return;
   try {
     const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=revision,updated_at`), {
@@ -770,8 +797,8 @@ async function refreshFromCloud() {
       cache: "no-store"
     });
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      if (String(error.message || "").includes("revision")) {
+      const details = await readResponseDetails(response);
+      if (String(details?.json?.message || details?.text || "").includes("revision")) {
         setSyncMessage("云同步需要升级，请重新运行最新版 SQL");
       }
       return;
@@ -779,6 +806,7 @@ async function refreshFromCloud() {
     const rows = await response.json();
     const revision = Number(rows[0]?.revision || 0);
     if (!revision || revision <= lastCloudRevision) return;
+    if (hasUnsyncedLocalChanges || syncBusy) return;
     await pullFromCloud({ silent: true });
   } catch {
     // Background checks stay silent; manual sync still reports errors.
@@ -794,7 +822,7 @@ function startAutoSync() {
   stopAutoSync();
   if (!isSyncReady()) return;
   if (hasUnsyncedLocalChanges) scheduleCloudPush();
-  syncPollTimer = window.setInterval(refreshFromCloud, 8000);
+  syncPollTimer = window.setInterval(() => refreshFromCloud({ reason: "poll" }), 30000);
 }
 
 function stopAutoSync() {
@@ -859,7 +887,7 @@ async function fetchCloudRow() {
     headers: syncHeaders(),
     cache: "no-store"
   });
-  if (!response.ok) throw new Error(await response.text());
+  if (!response.ok) throw new Error(formatSyncError("读取云端失败", response, await readResponseDetails(response)));
   const rows = await response.json();
   return rows[0] || null;
 }
@@ -919,12 +947,13 @@ async function createCloudRevision(data) {
       revision: 1
     })
   });
-  const body = await response.json().catch(() => null);
+  const details = await readResponseDetails(response);
+  const body = details.json;
   if (!response.ok) {
     const setupRequired = body?.code === "42703" || String(body?.message || "").includes("revision");
     const error = new Error(setupRequired
       ? "云同步需要升级：请在 Supabase SQL Editor 重新运行最新版 supabase-setup.sql"
-      : body?.message || body?.hint || "云端保存失败");
+      : formatSyncError("创建云端版本失败", response, details));
     error.syncConflict = false;
     throw error;
   }
@@ -948,12 +977,13 @@ async function saveCloudRevision(expectedRevision, data) {
       revision: nextRevision
     })
   });
-  const body = await response.json().catch(() => null);
+  const details = await readResponseDetails(response);
+  const body = details.json;
   if (!response.ok) {
     const setupRequired = body?.code === "42703" || String(body?.message || "").includes("revision");
     const error = new Error(setupRequired
       ? "云同步需要升级：请在 Supabase SQL Editor 重新运行最新版 supabase-setup.sql"
-      : body?.message || body?.hint || "云端保存失败");
+      : formatSyncError("保存云端版本失败", response, details));
     error.syncConflict = false;
     throw error;
   }
@@ -1075,7 +1105,7 @@ async function pullFromCloud({ silent } = { silent: true }) {
       headers: syncHeaders(),
       cache: "no-store"
     }, 10000);
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) throw new Error(formatSyncError("读取云端失败", response, await readResponseDetails(response)));
     const rows = await response.json();
     if (!rows.length) {
       syncBusy = false;
@@ -1110,6 +1140,47 @@ async function pullFromCloud({ silent } = { silent: true }) {
       pullButton.textContent = originalText;
     }
   }
+}
+
+async function diagnoseSync() {
+  const cloudBase = loadCloudBaseData();
+  const lines = [
+    `同步空间：${syncSpaceLabel()}`,
+    `本地条数：${inventory.length}`,
+    `本地基准条数：${cloudBase.length}`,
+    `本地版本：${lastCloudRevision || "未读取"}`,
+    `待上传：${hasUnsyncedLocalChanges ? "是" : "否"}`,
+    `Supabase：${syncConfig.url || "未填写"}`,
+    `代码版本：sync-debug2`
+  ];
+
+  setSyncMessage("正在诊断云同步...");
+  try {
+    const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&select=owner_key,revision,updated_at,data`), {
+      headers: syncHeaders(),
+      cache: "no-store"
+    }, 10000);
+    const details = await readResponseDetails(response);
+    if (!response.ok) {
+      lines.push(formatSyncError("读取测试失败", response, details));
+    } else {
+      const rows = Array.isArray(details.json) ? details.json : [];
+      if (!rows.length) {
+        lines.push("云端记录：未找到。首次上传会创建记录。");
+      } else {
+        lines.push(`云端版本：${rows[0].revision || "缺失"}`);
+        lines.push(`云端条数：${Array.isArray(rows[0].data) ? rows[0].data.length : "数据格式异常"}`);
+        lines.push(`云端时间：${rows[0].updated_at || "未知"}`);
+        lines.push(`本地与云端：${inventoryHash(rows[0].data || []) === inventoryHash(inventory) ? "一致" : "不一致"}`);
+      }
+    }
+  } catch (error) {
+    lines.push(`诊断请求失败：${error.message}`);
+  }
+
+  const message = lines.join("\n");
+  setSyncMessage("同步诊断完成");
+  alert(message);
 }
 
 function updateSyncStatus() {
