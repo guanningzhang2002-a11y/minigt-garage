@@ -909,27 +909,61 @@ function mergeCloudAndLocal(baseItems, localItems, cloudItems) {
   return merged.map(normalizeItem);
 }
 
-async function saveCloudRevision(expectedRevision, data) {
-  const response = await syncFetch(`${syncConfig.url}/rest/v1/rpc/save_minigt_collection`, {
+async function createCloudRevision(data) {
+  const response = await syncFetch(syncEndpoint("?on_conflict=owner_key&select=data,updated_at,revision"), {
     method: "POST",
-    headers: syncHeaders(),
+    headers: syncHeaders({ Prefer: "resolution=ignore-duplicates,return=representation" }),
     body: JSON.stringify({
-      p_owner_key: ownerKey(),
-      p_expected_revision: expectedRevision,
-      p_data: data
+      owner_key: ownerKey(),
+      data,
+      revision: 1
     })
   });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const setupRequired = body?.code === "PGRST202"
-      || String(body?.message || "").includes("save_minigt_collection");
+    const setupRequired = body?.code === "42703" || String(body?.message || "").includes("revision");
     const error = new Error(setupRequired
       ? "云同步需要升级：请在 Supabase SQL Editor 重新运行最新版 supabase-setup.sql"
       : body?.message || body?.hint || "云端保存失败");
-    error.syncConflict = body?.code === "40001" || String(body?.message || "").includes("sync_conflict");
+    error.syncConflict = false;
     throw error;
   }
-  return Array.isArray(body) ? body[0] : body;
+  const row = Array.isArray(body) ? body[0] : body;
+  if (!row) {
+    const error = new Error("云端已有更新版本，正在合并");
+    error.syncConflict = true;
+    throw error;
+  }
+  return row;
+}
+
+async function saveCloudRevision(expectedRevision, data) {
+  if (!expectedRevision) return createCloudRevision(data);
+  const nextRevision = Number(expectedRevision) + 1;
+  const response = await syncFetch(syncEndpoint(`?owner_key=eq.${encodeURIComponent(ownerKey())}&revision=eq.${encodeURIComponent(expectedRevision)}&select=data,updated_at,revision`), {
+    method: "PATCH",
+    headers: syncHeaders({ Prefer: "return=representation" }),
+    body: JSON.stringify({
+      data,
+      revision: nextRevision
+    })
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const setupRequired = body?.code === "42703" || String(body?.message || "").includes("revision");
+    const error = new Error(setupRequired
+      ? "云同步需要升级：请在 Supabase SQL Editor 重新运行最新版 supabase-setup.sql"
+      : body?.message || body?.hint || "云端保存失败");
+    error.syncConflict = false;
+    throw error;
+  }
+  const row = Array.isArray(body) ? body[0] : body;
+  if (!row) {
+    const error = new Error("云端已有更新版本，正在合并");
+    error.syncConflict = true;
+    throw error;
+  }
+  return row;
 }
 
 async function pushToCloud({ silent = true, automatic = false, attempt = 0 } = {}) {
