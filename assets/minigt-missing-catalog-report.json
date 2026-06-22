@@ -1,1 +1,38 @@
-{}
+{
+  "1314": {
+    "itemNo": "MGT01314",
+    "title": "Lamborghini LB-Silhouette WORKS MURCIELAGO GT Evo Fighter",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616175226102.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2251"
+  },
+  "1315": {
+    "itemNo": "MGT01315",
+    "title": "McLaren MP4/4 #11 Alain Prost 1988 Canadian Grand Prix 2nd Place",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616175633292.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2252"
+  },
+  "1316": {
+    "itemNo": "MGT01316",
+    "title": "Nissan Z VeilSide FFZ400 Ikazuchi Yellow",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616180254230.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2253"
+  },
+  "1317": {
+    "itemNo": "MGT01317",
+    "title": "Honda Prelude Rallye Red",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616181027461.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2254"
+  },
+  "1318": {
+    "itemNo": "MGT01318",
+    "title": "McLaren F1 GTR 1995 Presentation",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616181346270.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2255"
+  },
+  "1319": {
+    "itemNo": "MGT01319",
+    "title": "BMW M3 M Performance Touring Riviera Blue",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/06/20260616181603517.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2256"
+  }
+}
