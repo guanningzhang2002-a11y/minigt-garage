@@ -1,1 +1,20 @@
-{}
+{
+  "1344": {
+    "itemNo": "MGT01344",
+    "title": "Hyundai Ioniq 6 N Performance Blue Pearl",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727041031356.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2287"
+  },
+  "1345": {
+    "itemNo": "MGT01345",
+    "title": "Hyundai Ioniq 5 N Performance Blue Matt",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727041810466.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2288"
+  },
+  "1346": {
+    "itemNo": "MGT01346",
+    "title": "Hyundai Veloster N Performance Blue",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727042610359.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2289"
+  }
+}
