@@ -1,20 +1,38 @@
 {
-  "1344": {
-    "itemNo": "MGT01344",
-    "title": "Hyundai Ioniq 6 N Performance Blue Pearl",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727041031356.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2287"
+  "1338": {
+    "itemNo": "MGT01338",
+    "title": "Nissan GT-R Nismo 2024 Black",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728150948783.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2290"
   },
-  "1345": {
-    "itemNo": "MGT01345",
-    "title": "Hyundai Ioniq 5 N Performance Blue Matt",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727041810466.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2288"
+  "1339": {
+    "itemNo": "MGT01339",
+    "title": "Toyota Alphard 40 KUHL White",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728151352108.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2291"
   },
-  "1346": {
-    "itemNo": "MGT01346",
-    "title": "Hyundai Veloster N Performance Blue",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260727042610359.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2289"
+  "1340": {
+    "itemNo": "MGT01340",
+    "title": "Volkswagen ID.Buzz Porsche Renndienst",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728151640690.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2292"
+  },
+  "1341": {
+    "itemNo": "MGT01341",
+    "title": "Porsche 911 (992) GT3 Touring Auratium Green",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728151927706.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2293"
+  },
+  "1342": {
+    "itemNo": "MGT01342",
+    "title": "Ford Mustang Boss 302 1969 Bright Yellow",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728152316688.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2294"
+  },
+  "1343": {
+    "itemNo": "MGT01343",
+    "title": "Nissan Skyline LB-WORKS",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/07/20260728152855876.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2295"
   }
 }
