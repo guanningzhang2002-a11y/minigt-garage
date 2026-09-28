@@ -1,104 +1,38 @@
 {
-  "1013": {
-    "itemNo": "MGT01013",
-    "title": "Nissan LB-Silhouette WORKS GT35GT-RR Ver.1 XLARGE",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917203614388.jpg",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2391"
+  "926": {
+    "itemNo": "MGT00926",
+    "title": "Aston Martin V12 Vanquish",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260921185021975.jpg",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2392"
   },
-  "1113": {
-    "itemNo": "MGT01113",
-    "title": "Aston Martin AMR24 #14 Fernando Alonso 2024 F1 2024 Canadian GP",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917195839281.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2380"
+  "928": {
+    "itemNo": "MGT00928",
+    "title": "Ford Mustang convertible 1964 “Goldfinger”",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260921185713592.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2393"
   },
-  "1114": {
-    "itemNo": "MGT01114",
-    "title": "Aston Martin AMR24 #18 Lance Stroll 2024 F1 2024 Canadian GP",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917200010245.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2381"
+  "1304": {
+    "itemNo": "MGT01304",
+    "title": "Porsche 911 (992) GT3 RS Weissach Package Gulf Orange",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917202000767.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2388"
   },
-  "1240": {
-    "itemNo": "MGT01240",
-    "title": "Ford Mustang GT3 #65 Ford Multimatic Motorsports 2025 IMSA Daytona 24 Hrs Winner",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917200340743.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2382"
+  "1383": {
+    "itemNo": "MGT01383",
+    "title": "Hyundai Ioniq 5 Police Car",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924211812086.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2394"
   },
-  "1241": {
-    "itemNo": "MGT01241",
-    "title": "BMW M Hybrid V8 GTP #25 BMW M Team RLL 2024 IMSA Daytona 24 Hrs",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917200547799.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2383"
+  "1384": {
+    "itemNo": "MGT01384",
+    "title": "Hyundai Staria TAXI",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924212934454.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2395"
   },
-  "1242": {
-    "itemNo": "MGT01242",
-    "title": "BMW 750IL Black Sapphire",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917200850340.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2384"
-  },
-  "1243": {
-    "itemNo": "MGT01243",
-    "title": "Ford XB Falcon GT #33 1974 Bathurst 1000 Australia Exclusive",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917201126652.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2385"
-  },
-  "1244": {
-    "itemNo": "MGT01244",
-    "title": "Ford XB Falcon GT #25 1975 Bathurst 1000 Australia Exclusive",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917201331732.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2386"
-  },
-  "1303": {
-    "itemNo": "MGT01303",
-    "title": "McLaren F1 Blue Black Metallic",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917201811152.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2387"
-  },
-  "1305": {
-    "itemNo": "MGT01305",
-    "title": "Aston Martin DB5 Fiesta Red",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917202119747.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2389"
-  },
-  "1329": {
-    "itemNo": "MGT01329",
-    "title": "Nissan NISMO R34GT-R Z-Tune Z-Tune Silver",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917202542287.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2390"
-  },
-  "1377": {
-    "itemNo": "MGT01377",
-    "title": "Lamborghini Huracán LB★WORKS Lime Metallic",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916190057822.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2374"
-  },
-  "1379": {
-    "itemNo": "MGT01379",
-    "title": "Cadillac Eldorado Biarritz 1959 Black",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916203652030.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2375"
-  },
-  "1380": {
-    "itemNo": "MGT01380",
-    "title": "Land Rover Defender 110 1998 Camel Trophy Tierra del Fuego CT.24 Italy",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916204118729.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2376"
-  },
-  "1381": {
-    "itemNo": "MGT01381",
-    "title": "Lamborghini Urus Performante Viola Pasifae",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916204318058.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2377"
-  },
-  "1382": {
-    "itemNo": "MGT01382",
-    "title": "Hyundai Ioniq 5N RS-01T Stealth",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916204947307.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2378"
-  },
-  "1386": {
-    "itemNo": "MGT01386",
-    "title": "BMW Z3 Hellrot",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260916205308350.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2379"
+  "1385": {
+    "itemNo": "MGT01385",
+    "title": "Hyundai Casper Butter Cream Yellow Pearl",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924213121551.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2396"
   }
 }
