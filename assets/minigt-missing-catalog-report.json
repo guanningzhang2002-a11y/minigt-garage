@@ -1,38 +1,44 @@
 {
-  "926": {
-    "itemNo": "MGT00926",
-    "title": "Aston Martin V12 Vanquish",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260921185021975.jpg",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2392"
+  "1391": {
+    "itemNo": "MGT01391",
+    "title": "Toyota Vellfire 40 KUHL Metallic Pink",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929054544174.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2397"
   },
-  "928": {
-    "itemNo": "MGT00928",
-    "title": "Ford Mustang convertible 1964 “Goldfinger”",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260921185713592.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2393"
+  "1392": {
+    "itemNo": "MGT01392",
+    "title": "Scania 770S B8x4NA Hooklift Flatbed Orange",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929054756173.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2398"
   },
-  "1304": {
-    "itemNo": "MGT01304",
-    "title": "Porsche 911 (992) GT3 RS Weissach Package Gulf Orange",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260917202000767.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2388"
+  "1393": {
+    "itemNo": "MGT01393",
+    "title": "Lotus 78 #5 Mario Andretti 1977 US GP West Winner",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929055020677.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2399"
   },
-  "1383": {
-    "itemNo": "MGT01383",
-    "title": "Hyundai Ioniq 5 Police Car",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924211812086.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2394"
+  "1394": {
+    "itemNo": "MGT01394",
+    "title": "Lamborghini Temerario Viola Pasifae",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929055130976.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2400"
   },
-  "1384": {
-    "itemNo": "MGT01384",
-    "title": "Hyundai Staria TAXI",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924212934454.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2395"
+  "1395": {
+    "itemNo": "MGT01395",
+    "title": "Bugatti EB110 GT Azzurro Metallizzato Mondial de l'Automobile 1992",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929055403333.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2401"
   },
-  "1385": {
-    "itemNo": "MGT01385",
-    "title": "Hyundai Casper Butter Cream Yellow Pearl",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260924213121551.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2396"
+  "1396": {
+    "itemNo": "MGT01396",
+    "title": "Aston Martin AMR24 #14 Fernando Alonso 2024 F1 2024 Las Vegas GP",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929055707773.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2402"
+  },
+  "1413": {
+    "itemNo": "MGT01413",
+    "title": "Aston Martin AMR24 #18 Lance Stroll 2024 F1 2024 Las Vegas GP",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/09/20260929060118829.jpg",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2403"
   }
 }
