@@ -1,62 +1,38 @@
 {
-  "921": {
-    "itemNo": "MGT00921",
-    "title": "AMC Hornet X Hatchback “The Man with the Golden Gun”",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/10/20261013180011290.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2426"
+  "1188": {
+    "itemNo": "MGT01188",
+    "title": "No. 24 NASCAR Next Gen Garage 56 Chevrolet Camaro ZL1 Prepared by Hendrick Motorsports 2023 24 Hours of Le Mans",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110184515061.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2457"
   },
-  "929": {
-    "itemNo": "MGT00929",
-    "title": "Tuk-Tuk",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/10/20261013180504892.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2427"
+  "1430": {
+    "itemNo": "MGT01430",
+    "title": "BMW M4 GT3 EVO #33 610 Racing 2026 China GT Shanghai",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110184848650.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2458"
   },
-  "1419": {
-    "itemNo": "MGT01419",
-    "title": "Aston Martin Valkyrie Escaping White",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104173502346.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2437"
+  "1439": {
+    "itemNo": "MGT01439",
+    "title": "Aston Martin Valkyrie Cobalt Blue",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110185031484.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2459"
   },
-  "1420": {
-    "itemNo": "MGT01420",
-    "title": "Chevrolet Corvette ZR1 Torch Red",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104173718594.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2438"
+  "1440": {
+    "itemNo": "MGT01440",
+    "title": "Jaguar C-X75 Satin Grey",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110185244108.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2460"
   },
-  "1421": {
-    "itemNo": "MGT01421",
-    "title": "Mazda MX-5 (NA) Pandem Classic Red",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104174052189.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2439"
+  "1441": {
+    "itemNo": "MGT01441",
+    "title": "Lamborghini Huracan GT3 EVO2 #78 Forte Racing 2025 IMSA Daytona 24 Hrs",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110185427476.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2461"
   },
-  "1422": {
-    "itemNo": "MGT01422",
-    "title": "Honda Prelude Moonlit White Pearl",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104174343699.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2440"
-  },
-  "1424": {
-    "itemNo": "MGT01424",
-    "title": "LB★WORKS Lamborghini Huracán GT Ruby Purple",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104174826159.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2441"
-  },
-  "1429": {
-    "itemNo": "MGT01429",
-    "title": "Porsche 911 GT3 Cup #288 610 Racing 2024 China Endurance Championship",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261103221106608.jpg",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2435"
-  },
-  "1435": {
-    "itemNo": "MGT01435",
-    "title": "Porsche 911 GT3 R (992) #9 Bingo Racing with LM Corsa 2026 Japan Cup Sugo Race 2 Winner",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104175138616.JPG",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2442"
-  },
-  "1436": {
-    "itemNo": "MGT01436",
-    "title": "Porsche 911 GT3 R (992) #77 AO Racing",
-    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261104173011389.jpg",
-    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2436"
+  "1442": {
+    "itemNo": "MGT01442",
+    "title": "BMW M5 (G90) Borusan Turkish Blue",
+    "imageUrl": "https://minigt.tsm-models.com/upload/picfile/2026/11/20261110185701535.JPG",
+    "productUrl": "https://minigt.tsm-models.com/index.php?action=product-detail&id=2462"
   }
 }
